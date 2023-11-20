@@ -7,6 +7,7 @@ def generate_uuid():
     """Generate a unique id using uuid4()"""
     return uuid4().hex
 
+
 class BaseModel(db.Model):
     """BaseClass for all models"""
     __abstract__ = True
@@ -45,4 +46,4 @@ class BaseModel(db.Model):
     def format(self):
         """Format the object's attributes as a dictionary"""
         # This method should be overridden in subclasses
-        raise NotImplementedError("Subclasses must implement the 'format' method")
+        raise NotImplementedError("Subclasses must implement the 'format' method")  # noqa E501
