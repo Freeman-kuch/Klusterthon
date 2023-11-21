@@ -27,6 +27,7 @@ def create_app():
 
     # create db tables from models if not exists
     with app.app_context():
+        print("creating tables")
         db.create_all()
 
     return app
