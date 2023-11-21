@@ -1,5 +1,7 @@
 from kluster import db
 from kluster.models.base import BaseModel
+from datetime import datetime
+
 
 class Profiles(BaseModel):
     """Profiles model"""
@@ -9,12 +11,15 @@ class Profiles(BaseModel):
     last_name = db.Column(db.String(50))
     date_of_birth = db.Column(db.DateTime)
     gender= db.Column(db.Enum('male', 'female', 'undefined',
-                            name="GENDER"), server_default="undefined", nullable=False)
+                              name="GENDER"),
+                      server_default="undefined", nullable=False)
     address = db.Column(db.String(100))
     display_picture = db.Column(db.String(100))
 
-    def __init__(self, user_id, first_name, last_name, date_of_birth, gender, address, display_picture):
-        """Intialize Profiles model
+    def __init__(self, user_id: str, first_name: str, last_name: str,
+                 date_of_birth: str, gender: str, address: str = None,
+                 display_picture: str = None):
+        """Initialize Profiles model
 
         Args:
             user_id (str): user id
