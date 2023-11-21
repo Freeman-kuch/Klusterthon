@@ -86,10 +86,10 @@ def callback():
         redirect_url=request.base_url,
         code=code
     )
-    # print(headers)
-    # print(token_url)
-    # print(body)
-    # print(google_token_url)
+    print(headers)
+    print(token_url)
+    print(body)
+    print(google_token_url)
     token_response = requests.post(
         token_url,
         headers=headers,
@@ -120,7 +120,7 @@ def callback():
 
     # Create a user in your database with the information you just got from Google
     # Begin user session by logging the user in
-    login_user("")  # the user object
+    login_user("")  # the user object  this will throw an error, because of the empty
 
     # Send user back to homepage
     return redirect(url_for("index"))  # home page or whatever the flow allows
@@ -133,6 +133,7 @@ def google_login():
     ).json().get(
         "authorization_endpoint"
     )
+    print(request.base_url)
     login_uri = client.prepare_request_uri(
         google_auth_url,
         redirect_uri= request.base_url + "/callback",

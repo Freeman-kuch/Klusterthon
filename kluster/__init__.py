@@ -2,13 +2,13 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask import Flask
 from flask_login import LoginManager
-from kluster.config import App_Config
+from kluster.config import AppConfig
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 
 
-def create_app(config_class=None):
+def create_app(config_class=AppConfig):
     """
     Create a new instance of the app with the given configuration.
 
