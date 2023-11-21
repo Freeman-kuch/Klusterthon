@@ -1,20 +1,23 @@
 from kluster import db
 from kluster.models.base import BaseModel
+from kluster.models.users import Users
 from datetime import datetime
 
 
 class Profiles(BaseModel):
     """Profiles model"""
     __tablename__ = 'profiles'
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.String(60), db.ForeignKey('users.id'))
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     date_of_birth = db.Column(db.DateTime)
-    gender= db.Column(db.Enum('male', 'female', 'undefined',
+    gender = db.Column(db.Enum('male', 'female',
                               name="GENDER"),
-                      server_default="undefined", nullable=False)
+                      nullable=False)
     address = db.Column(db.String(100))
     display_picture = db.Column(db.String(100))
+
+    user = db.relationship("users", backref=db.backref("profiles", lazy=True), cascade="all, delete")
 
     def __init__(self, user_id: str, first_name: str, last_name: str,
                  date_of_birth: str, gender: str, address: str = None,

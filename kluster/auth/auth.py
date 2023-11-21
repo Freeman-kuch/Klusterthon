@@ -1,11 +1,27 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, request, jsonify, redirect, url_for
 from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
 from werkzeug.security import generate_password_hash
+from kluster import login_manager
+
+
+import json
+import os
+from flask_login import (
+    current_user,
+    login_required,
+    login_user,
+    logout_user,
+)
+from oauthlib.oauth2 import WebApplicationClient
+import requests
+
 
 auth = Blueprint("authentication", __name__, url_prefix="/api/v1/auth")
 
+# OAUTH2 client setup
+client = WebApplicationClient(os.environ.get("client_id"))
 
 @auth.route('/sign_up', methods=['POST'])
 def sign_up():
@@ -51,3 +67,29 @@ def sign_up():
             "message": "Sign up failed",
             "error": "internal server error"
         }), 500
+
+
+@auth.route("/google-login/callback")
+def callback():
+    code = request.args.get("code")
+    google_auth_url = requests.get(
+        "https://accounts.google.com/.well-known/openid-configuration"
+    ).json().get(
+        "token_endpoint"
+    )
+    # now send the code back to google token endpoint
+    return "something"
+
+@auth.route("/google-login")
+def google_login():
+    google_auth_url = requests.get(
+        "https://accounts.google.com/.well-known/openid-configuration"
+    ).json().get(
+        "authorization_endpoint"
+    )
+    login_uri = client.prepare_request_uri(
+        google_auth_url,
+        redirect_uri= request.base_url + "/callback",
+        scope=["openid", "email", "profile"],
+    )
+    return redirect(login_uri)
