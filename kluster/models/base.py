@@ -23,9 +23,9 @@ class BaseModel(db.Model):
     updated_at = db.Column(db.DateTime(), default=datetime.now, nullable=False)
 
     def __init__(self):
-      self.id = generate_uuid()
-      self.createdAt = datetime.utcnow()
-      self.updatedAt = datetime.utcnow()
+        self.id = generate_uuid()
+        self.createdAt = datetime.utcnow()
+        self.updatedAt = datetime.utcnow()
 
 
     def insert(self):

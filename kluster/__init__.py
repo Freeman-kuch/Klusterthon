@@ -1,12 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask import Flask
-from kluster.config import App_Config
 
 db = SQLAlchemy()
 
 
-def create_app():
+def create_app(config_class=None):
     """
     Create a new instance of the app with the given configuration.
 
@@ -15,7 +14,8 @@ def create_app():
     """
     # Initialize Flask
     app = Flask(__name__)
-    app.config.from_object(App_Config)
+    if config_class:
+        app.config.from_object(config_class)
     if app.config["SQLALCHEMY_DATABASE_URI"]:
         print(f"using db")
 
@@ -24,6 +24,11 @@ def create_app():
 
     # Initialize SQLAlchemy
     db.init_app(app)
+
+    # register blueprints
+    from kluster.auth.auth import auth
+
+    app.register_blueprint(auth)
 
     # create db tables from models if not exists
     with app.app_context():
