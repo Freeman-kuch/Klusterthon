@@ -8,7 +8,7 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 
 
-def create_app():
+def create_app(config_class=None):
     """
     Create a new instance of the app with the given configuration.
 
@@ -17,7 +17,8 @@ def create_app():
     """
     # Initialize Flask
     app = Flask(__name__)
-    app.config.from_object(App_Config)
+    if config_class:
+        app.config.from_object(config_class)
     if app.config["SQLALCHEMY_DATABASE_URI"]:
         print(f"using db")
 
@@ -31,6 +32,7 @@ def create_app():
     login_manager.init_app(app)
 
     # Register blueprints
+
     from kluster.auth.auth import auth
 
     app.register_blueprint(auth)
