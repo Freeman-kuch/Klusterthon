@@ -1,8 +1,11 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask import Flask
+from flask_login import LoginManager
+from kluster.config import App_Config
 
 db = SQLAlchemy()
+login_manager = LoginManager()
 
 
 def create_app(config_class=None):
@@ -25,7 +28,11 @@ def create_app(config_class=None):
     # Initialize SQLAlchemy
     db.init_app(app)
 
-    # register blueprints
+    # Initialize Flask-login Manager
+    login_manager.init_app(app)
+
+    # Register blueprints
+
     from kluster.auth.auth import auth
 
     app.register_blueprint(auth)
