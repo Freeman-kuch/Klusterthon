@@ -10,7 +10,8 @@ class Users(BaseModel):
     refresh_token = db.Column(db.String(255), nullable=False)
     access_token = db.Column(db.String(255), nullable=False)
 
-    def __init__(self, email, password, role_id, refresh_token, access_token):
+    def __init__(self, email: str, password: str, role_id: str,
+                 refresh_token: str = None, access_token: str = None):
         super().__init__()
         self.email = email
         self.password = password
@@ -33,9 +34,6 @@ class Users(BaseModel):
         return {
             "id": self.id,
             "email": self.email,
-            "refresh_token": self.refresh_token,
-            "access_token": self.access_token,
-            "role_id": self.role_id,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
