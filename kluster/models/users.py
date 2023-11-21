@@ -3,12 +3,17 @@ from kluster.models.base import BaseModel
 
 
 class Users(BaseModel):
+    """Users model for the users table"""
     __tablename__ = "users"
     email = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
-    role_id = db.Column(db.String(255), nullable=False, unique=True)
+    role_id = db.Column(db.String(255), db.ForeignKey("roles.id"),
+                        nullable=False, unique=True)
     refresh_token = db.Column(db.String(255), nullable=False)
     access_token = db.Column(db.String(255), nullable=False)
+    # relationships specification
+    profile = db.relationship("Profile", backref=db.backref("user", lazy=True),
+                              cascade="all, delete-orphan")
 
     def __init__(self, email: str, password: str, role_id: str,
                  refresh_token: str = None, access_token: str = None):
@@ -23,8 +28,6 @@ class Users(BaseModel):
         return {
             "id": self.id,
             "email": self.email,
-            "refresh_token": self.refresh_token,
-            "access_token": self.access_token,
             "role_id": self.role_id,
             "created_at": self.created_at,
             "updated_at": self.updated_at,

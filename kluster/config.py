@@ -2,7 +2,9 @@ from dotenv import load_dotenv, find_dotenv
 import os
 
 load_dotenv(find_dotenv())
-class App_Config():
+
+
+class AppConfig():
     """_summary_"""
 
     SECRET_KEY = os.environ.get("SECRET_KEY")

@@ -6,7 +6,7 @@ from datetime import datetime
 class Profiles(BaseModel):
     """Profiles model"""
     __tablename__ = 'profiles'
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
+    user_id = db.Column(db.String(60), db.ForeignKey('users.id'), unique=True)
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     date_of_birth = db.Column(db.DateTime)
