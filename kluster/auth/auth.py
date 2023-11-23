@@ -1,25 +1,21 @@
-import datetime
+import json, os, requests, datetime
 from typing import Dict
-
 from flask import Blueprint, request, jsonify, redirect, url_for
 from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
 from werkzeug.security import generate_password_hash, check_password_hash
 from kluster import login_manager, db, jwt
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, current_user
 
-import json
-import os
 from flask_login import (
-    current_user,
     login_required,
     login_user,
     logout_user,
 )
 from kluster.helpers import convert_pic_to_link, query_one_filtered
 from oauthlib.oauth2 import WebApplicationClient
-import requests
+
 
 auth = Blueprint("authentication", __name__, url_prefix="/api/v1/auth")
 
@@ -28,7 +24,7 @@ client = WebApplicationClient(os.environ.get("client_id"))
 
 
 @jwt.user_identity_loader
-def user_identity_lookup(email: str) -> str | None:
+def user_identity_lookup(email: str) -> Dict | None:
     user = query_one_filtered(Users, email=email)
     return user if user else None
 
@@ -145,6 +141,15 @@ def login():
                 "error": "Internal Server Error"
             }
         ), 500
+
+
+@auth.route("/me", methods=["GET"])
+@jwt_required()
+def me():
+    return jsonify(
+        id=current_user.id,
+        email=current_user.email,
+    )
 
 
 @auth.route("/google-login/callback")
