@@ -34,8 +34,10 @@ def create_app(config_class=AppConfig):
     # Register blueprints
 
     from kluster.auth.auth import auth
+    from kluster.errors.error_handler import error
 
     app.register_blueprint(auth)
+    app.register_blueprint(error)
 
     # create db tables from models if not exists
     with app.app_context():
