@@ -23,19 +23,49 @@ client = WebApplicationClient(os.environ.get("client_id"))
 
 @jwt.user_identity_loader
 def user_identity_lookup(email: str) -> Dict | None:
+    """
+    Retrieves the user identity based on the provided email.
+
+    Args:
+        email (str): The email of the user for which the identity needs to be looked up.
+
+    Returns:
+        dict or None: The user with the specified email, represented as a dictionary. If no user is found, None is returned.
+    """
     user = query_one_filtered(Users, email=email)
     return user if user else None
 
 
 @jwt.user_lookup_loader
 def user_lookup_callback(_jwt_header, jwt_data) -> Dict | None:
+    """
+    Look up a user based on the JWT data.
+
+    Args:
+        _jwt_header (dict): The JWT header, which contains information about the algorithm used to sign the token.
+        jwt_data (dict): The JWT data, which contains the user's identity and other claims.
+
+    Returns:
+        dict or None: A dictionary representing the user if a user with the specified email is found in the database.
+                     None if no user with the specified email is found.
+    """
     identity = jwt_data["sub"]
     return query_one_filtered(Users, email=identity) or None
 
 
 @auth.route('/sign_up', methods=['POST'])
 def sign_up():
-    """view function responsible for registering new user"""
+    """
+    View function responsible for registering a new user.
+
+    Args:
+        None
+
+    Returns:
+        If the registration is successful, the function redirects the user to the login page.
+        If any required field is missing in the user data, the function returns a JSON response with a "Bad Request" message and a "Missing Field" error.
+        If an error occurs during the registration process, the function returns a JSON response with a "Sign up failed" message and an "internal server error" error.
+    """
     data = request.form
     first_name = data.get('first_name', None)
     last_name = data.get('last_name', None)
@@ -89,6 +119,19 @@ def sign_up():
 
 @auth.route("/login", methods=["POST"])
 def login():
+    """
+    Handles the login functionality of the application.
+
+    Retrieves the user data from the database based on the provided email.
+    Checks if the required parameters (email, password, and role) are present.
+    Verifies the password provided by the user against the hashed password stored in the database.
+    If the email or password is invalid, returns a JSON response with an error message.
+    If the login is successful, creates an access token and a refresh token using the Flask-JWT-Extended library.
+    Returns a JSON response with the access token and refresh token.
+
+    :return: JSON response with the access token and refresh token if login is successful,
+             JSON response with an error message if the email or password is invalid.
+    """
     req = request.form
     email = req.get("email")
     password = req.get("password")
@@ -141,6 +184,11 @@ def login():
 @auth.route("/me", methods=["GET"])
 @jwt_required()
 def me():
+    """
+    Returns the current user's ID and email in JSON format.
+
+    :return: JSON object containing the current user's ID and email.
+    """
     return jsonify(
         id=current_user.id,
         email=current_user.email,
@@ -149,6 +197,13 @@ def me():
 @auth.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
+    """
+    Refreshes the access token.
+
+    This function is a Flask route for refreshing an access token. It is decorated with the `jwt_required` decorator to ensure that the request includes a valid refresh token. If the token is valid, a new access token is created and returned as a JSON response.
+
+    :return: JSON response containing the new access token.
+    """
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity)
     return jsonify(access_token=access_token)
@@ -158,24 +213,36 @@ def refresh():
 @auth.delete("/logout")
 @jwt_required(verify_type=False)
 def logout():
+    """
+    Logs out the user by setting the access_token and refresh_token fields to None.
+
+    Returns:
+        A JSON response indicating the success or failure of the logout process.
+
+    Raises:
+        Exception: If an error occurs during the logout process.
+
+    Example Usage:
+        POST /api/v1/auth/logout
+        Headers:
+          Authorization: Bearer <access_token>
+    """
     identity = current_user.id
     try:
-
         user = query_one_filtered(Users, id=identity)
         user["access_token"] = None
         user["refresh_token"] = None
         user.update()
         return jsonify(
             {
-                "message":"you have been logged out",
+                "message": "You have been logged out.",
             }
         ), 204
-
     except Exception as e:
         print(e)
         return jsonify(
             {
-                "message":"something went Wrong will loggin this user out",
+                "message": "Something went wrong while logging this user out.",
                 "error": "Internal Server Error"
             }
         ), 500
@@ -183,8 +250,21 @@ def logout():
 
 @auth.route("/google-login/callback")
 def callback():
-    """ they will send you back tokens that will allow you to authenticate to other Google endpoints on
-    behalf of the use"""
+    """
+    Handles the callback URL for Google login.
+
+    Retrieves the authorization code from the request arguments and uses it to obtain access and refresh tokens from Google.
+    Makes a request to the Google userinfo endpoint to retrieve the user's information.
+    If the user's email is verified, it creates a new user and profile object in the database using the retrieved information.
+    Finally, it logs the user in and redirects them to the homepage.
+
+    Returns:
+        A redirect to the homepage.
+
+    Example Usage:
+        # Request URL: http://localhost:5000/api/v1/auth/google-login/callback?code=abc123
+        # Response: Redirects to the homepage
+    """
     code = request.args.get("code")
     google_token_url = requests.get(
         "https://accounts.google.com/.well-known/openid-configuration"
@@ -261,6 +341,14 @@ def callback():
 # WORKS
 @auth.route("/google-login")
 def google_login():
+    """
+    Handles the Google login process.
+
+    Retrieves the Google authorization endpoint from the OpenID configuration, prepares a login URI with the required scopes, and redirects the user to the Google login page.
+
+    Returns:
+        None: Redirects the user to the Google login page.
+    """
     # Get Google authorization endpoint from OpenID configuration
     openid_configuration = requests.get(
         "https://accounts.google.com/.well-known/openid-configuration"
