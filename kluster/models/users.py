@@ -17,13 +17,15 @@ class Users(BaseModel, UserMixin):
                               cascade="all, delete-orphan")
 
     def __init__(self, email: str, password: str, role_id: str,
-                 refresh_token: str = None, access_token: str = None):
+                 refresh_token: str = None, access_token: str = None, **kwargs):
         super().__init__()
         self.email = email
         self.password = password
         self.role_id = role_id
         self.refresh_token = refresh_token
         self.access_token = access_token
+        if user_id := kwargs.get("id", None):
+            self.id = user_id
 
     def __repr__(self):
         return {

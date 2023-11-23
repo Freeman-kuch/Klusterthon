@@ -194,20 +194,23 @@ def me():
         email=current_user.email,
     )
 
+
 @auth.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
     """
     Refreshes the access token.
 
-    This function is a Flask route for refreshing an access token. It is decorated with the `jwt_required` decorator to ensure that the request includes a valid refresh token. If the token is valid, a new access token is created and returned as a JSON response.
+    This function is a Flask route for refreshing an access token.
+    It is decorated with the `jwt_required` decorator to ensure that
+    the request includes a valid refresh token. If the token is valid,
+    a new access token is created and returned as a JSON response.
 
     :return: JSON response containing the new access token.
     """
     identity = get_jwt_identity()
     access_token = create_access_token(identity=identity)
     return jsonify(access_token=access_token)
-
 
 
 @auth.delete("/logout")
@@ -253,9 +256,11 @@ def callback():
     """
     Handles the callback URL for Google login.
 
-    Retrieves the authorization code from the request arguments and uses it to obtain access and refresh tokens from Google.
-    Makes a request to the Google userinfo endpoint to retrieve the user's information.
-    If the user's email is verified, it creates a new user and profile object in the database using the retrieved information.
+    Retrieves the authorization code from the request arguments and uses it to
+    obtain access and refresh tokens from Google. Makes a request to the Google
+    userinfo endpoint to retrieve the user's information. If the user's email
+    is verified, it creates a new user and profile object in the database using
+    the retrieved information.
     Finally, it logs the user in and redirects them to the homepage.
 
     Returns:
@@ -271,7 +276,8 @@ def callback():
     ).json().get(
         "token_endpoint"
     )
-    # Prepare and send a request with the code just gotten to get tokens, this requires https connection
+    # Prepare and send a request with the code just gotten to get tokens,
+    # this requires https connection
     token_url, headers, body = client.prepare_token_request(
         google_token_url,
         authorization_response=request.url,
