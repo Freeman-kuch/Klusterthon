@@ -1,16 +1,23 @@
 from kluster import db
 from kluster.models.base import BaseModel
+from flask_login import UserMixin
 
 
-class Users(BaseModel):
+class Users(BaseModel, UserMixin):
+    """Users model for the users table"""
     __tablename__ = "users"
     email = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
-    role_id = db.Column(db.String(255), nullable=False, unique=True)
-    refresh_token = db.Column(db.String(255), nullable=False)
-    access_token = db.Column(db.String(255), nullable=False)
+    role_id = db.Column(db.String(255), db.ForeignKey("roles.id"),
+                        nullable=False, unique=True)
+    refresh_token = db.Column(db.String(255), nullable=True)
+    access_token = db.Column(db.String(255), nullable=True)
+    # relationships specification
+    profile = db.relationship("Profile", backref=db.backref("users", lazy=True),
+                              cascade="all, delete-orphan")
 
-    def __init__(self, email, password, role_id, refresh_token, access_token):
+    def __init__(self, email: str, password: str, role_id: str,
+                 refresh_token: str = None, access_token: str = None):
         super().__init__()
         self.email = email
         self.password = password
@@ -22,8 +29,6 @@ class Users(BaseModel):
         return {
             "id": self.id,
             "email": self.email,
-            "refresh_token": self.refresh_token,
-            "access_token": self.access_token,
             "role_id": self.role_id,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
@@ -33,9 +38,6 @@ class Users(BaseModel):
         return {
             "id": self.id,
             "email": self.email,
-            "refresh_token": self.refresh_token,
-            "access_token": self.access_token,
-            "role_id": self.role_id,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
         }
