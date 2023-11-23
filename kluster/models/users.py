@@ -1,18 +1,19 @@
 from kluster import db
 from kluster.models.base import BaseModel
+from flask_login import UserMixin
 
 
-class Users(BaseModel):
+class Users(BaseModel, UserMixin):
     """Users model for the users table"""
     __tablename__ = "users"
     email = db.Column(db.String(255), nullable=False, unique=True)
     password = db.Column(db.String(255), nullable=False)
     role_id = db.Column(db.String(255), db.ForeignKey("roles.id"),
                         nullable=False, unique=True)
-    refresh_token = db.Column(db.String(255), nullable=False)
-    access_token = db.Column(db.String(255), nullable=False)
+    refresh_token = db.Column(db.String(255), nullable=True)
+    access_token = db.Column(db.String(255), nullable=True)
     # relationships specification
-    profile = db.relationship("Profile", backref=db.backref("user", lazy=True),
+    profile = db.relationship("Profile", backref=db.backref("users", lazy=True),
                               cascade="all, delete-orphan")
 
     def __init__(self, email: str, password: str, role_id: str,

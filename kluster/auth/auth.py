@@ -3,8 +3,7 @@ from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
 from werkzeug.security import generate_password_hash
-from kluster import login_manager
-
+from kluster import login_manager, db
 
 import json
 import os
@@ -14,14 +13,24 @@ from flask_login import (
     login_user,
     logout_user,
 )
+from kluster.helpers import query_one_filtered
 from oauthlib.oauth2 import WebApplicationClient
 import requests
-
 
 auth = Blueprint("authentication", __name__, url_prefix="/api/v1/auth")
 
 # OAUTH2 client setup
 client = WebApplicationClient(os.environ.get("client_id"))
+
+
+@login_manager.user_loader
+def load_user(user_id: str) -> str | None:
+    user = db.query_one_filtered(user_id)
+    return user if user else None
+
+
+login_manager.login_view = "google-login"
+
 
 @auth.route('/sign_up', methods=['POST'])
 def sign_up():
@@ -54,7 +63,7 @@ def sign_up():
         new_user = Users(email=email, password=hashed_password,
                          role_id=role.id)
         new_user.insert()
-        new_user_profile = Profiles(user_id=new_user.id,first_name=first_name,
+        new_user_profile = Profiles(user_id=new_user.id, first_name=first_name,
                                     last_name=last_name,
                                     date_of_birth=date_of_birth, gender=gender)
         new_user_profile.insert()
@@ -71,7 +80,7 @@ def sign_up():
 
 @auth.route("/google-login/callback")
 def callback():
-    """ hey will send you back tokens that will allow you to authenticate to other Google endpoints on
+    """ they will send you back tokens that will allow you to authenticate to other Google endpoints on
     behalf of the use"""
     code = request.args.get("code")
     google_token_url = requests.get(
@@ -79,26 +88,27 @@ def callback():
     ).json().get(
         "token_endpoint"
     )
-    # Prepare and send a request to get tokens, this requires https connection
+    # Prepare and send a request with the code just gotten to get tokens, this requires https connection
     token_url, headers, body = client.prepare_token_request(
         google_token_url,
         authorization_response=request.url,
         redirect_url=request.base_url,
         code=code
     )
-    print(headers)
-    print(token_url)
-    print(body)
-    print(google_token_url)
+    print(token_url, headers, body)
     token_response = requests.post(
-        token_url,
-        headers=headers,
-        data=body,
+        token_url,  # https://oauth2.googleapis.com/token
+        headers=headers,  # {'Content-Type': 'application/x-www-form-urlencoded'}
+        data=body,  # grant_type=authorization_code&client_id=87619606914-9ipquel4ov7ah31468gj3a2o0o2jr5rt.apps.
+        # googleusercontent.com&code=4%2F0AfJohXl4XwZm8G-Cg2bKMjmqRB-mQbmvXCjKE4DjY
+        # UKfXvSMUAAZeKB7NqzqX47SmvOPGA&redirect_uri=https%3A%2F%2F127.0.0.1%3A5000%2Fapi%2Fv1%2Fauth%2Fgoogle-login%2Fcallback
+
         auth=(os.environ.get("client_id"), os.environ.get("client_secret")),
-    )
+    )  # This returns the access, refresh tokens from google.. the one associated the the user
 
     # Parse the tokens for user information
-    client.parse_request_body_response(json.dumps(token_response.json()))
+    f = client.parse_request_body_response(json.dumps(token_response.json()))
+    print(f["access_token"], f)
 
     user_info_endpoint = requests.get(
         "https://accounts.google.com/.well-known/openid-configuration"
@@ -110,13 +120,34 @@ def callback():
     # You want to make sure their email is verified.
     # The user authenticated with Google, authorized your
     # app, and now you've verified their email through Google!
+    # print(userinfo_response.json())
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
         picture = userinfo_response.json()["picture"]
-        users_name = userinfo_response.json()["given_name"]
+        first_name = userinfo_response.json()["given_name"]
+        last_name = userinfo_response.json()["family_name"]
     else:
         return "User email not available or not verified by Google.", 400
+    try:
+
+        new_user = Users(
+            id=unique_id,
+            email=users_email,
+            password="",
+            role_id="",
+            refresh_token=f["refresh_token"],
+            access_token=f["access_token"],
+        )
+        new_profile = Profiles(
+            user_id=new_user.id,
+            first_name=first_name,
+            last_name=last_name,
+            date_of_birth="",
+            display_picture=picture,
+        )
+    except:
+        pass
 
     # Create a user in your database with the information you just got from Google
     # Begin user session by logging the user in
@@ -125,20 +156,28 @@ def callback():
     # Send user back to homepage
     return redirect(url_for("index"))  # home page or whatever the flow allows
 
+
 # WORKS
 @auth.route("/google-login")
 def google_login():
-    google_auth_url = requests.get(
+    # Get Google authorization endpoint from OpenID configuration
+    openid_configuration = requests.get(
         "https://accounts.google.com/.well-known/openid-configuration"
-    ).json().get(
-        "authorization_endpoint"
-    )
-    print(request.base_url)
+    ).json()
+    authorization_endpoint = openid_configuration.get("authorization_endpoint")
+
+    # Prepare login URI with required scopes, including "calendar"
+    redirect_uri = request.base_url + "/callback"
+    scopes = ["openid", "email", "profile", "https://www.googleapis.com/auth/calendar"]
+    access_type = "offline"
     login_uri = client.prepare_request_uri(
-        google_auth_url,
-        redirect_uri= request.base_url + "/callback",
-        scope=["openid", "email", "profile"],
+        authorization_endpoint,
+        redirect_uri=redirect_uri,
+        scope=scopes,
+        access_type=access_type
     )
+
+    # Redirect to the Google login URI
     return redirect(login_uri)
 
 
@@ -146,4 +185,4 @@ def google_login():
 @login_required
 def logout():
     logout_user()
-    return redirect(url_for("index"))  # landing page
+    return "you have been logged out" # landing page

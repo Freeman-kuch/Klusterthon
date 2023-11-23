@@ -12,10 +12,26 @@ class Profiles(BaseModel):
     first_name = db.Column(db.String(50))
     last_name = db.Column(db.String(50))
     date_of_birth = db.Column(db.DateTime)
-    gender = db.Column(db.Enum('male', 'female',
-                              name="GENDER"),
-                      nullable=False)
+    gender = db.Column(db.Enum(
+        'male',
+        'female',
+        name="GENDER",
+    ),
+        nullable=False
+    )
+    blood_group = db.Column(db.Enum(
+        'A',
+        'B',
+        'O',
+        'AB',
+        'others',
+        name="BLOOD_GROUP",
+    ),
+        nullable=False
+    )
     address = db.Column(db.String(100))
+    allergies = db.Column(db.String(100), nullable=True)
+    age = db.Column(db.Integer, nullable=False)
     display_picture = db.Column(db.String(100))
 
     user = db.relationship("users", backref=db.backref("profiles", lazy=True), cascade="all, delete")
@@ -46,7 +62,7 @@ class Profiles(BaseModel):
     def __repr__(self):
         """Representation of Profiles model"""
         return f"<Profiles(id={self.id}, user_id={self.user_id}, first_name={self.first_name}, last_name={self.last_name}, gender={self.gender}, address={self.address}, display_picture = {self.display_picture})>"
-    
+
     def format(self):
         """Format the object's attributes as a dictionary"""
         return ({
