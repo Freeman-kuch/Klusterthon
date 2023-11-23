@@ -1,4 +1,5 @@
 from dotenv import load_dotenv, find_dotenv
+from datetime import timedelta
 import os, cloudinary
 
 load_dotenv(find_dotenv())
@@ -9,6 +10,8 @@ class AppConfig():
 
     SECRET_KEY = os.environ.get("SECRET_KEY")
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
+    JWT_TOKEN_LOCATION = ["headers"]
+    JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False
