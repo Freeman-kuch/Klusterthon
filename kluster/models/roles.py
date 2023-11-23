@@ -1,5 +1,6 @@
 from kluster.models.base import BaseModel
 from kluster import db
+from kluster.models.users import Users
 
 
 class Roles(BaseModel):
@@ -7,8 +8,6 @@ class Roles(BaseModel):
     __tablename__ = "roles"
     role = db.Column(db.Enum('doctor', 'patient', name="USER_ROLE"), nullable=False)  # noqa E501
     # relationships specification
-    permissions = db.relationship("Permissions", backref=db.backref("role", lazy=True),  # noqa E501
-                                  cascade="all, delete-orphan")
     users = db.relationship("Users", backref=db.backref("role", lazy=True),
                             cascade="all, delete-orphan")
 

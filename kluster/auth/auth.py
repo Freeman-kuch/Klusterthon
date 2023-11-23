@@ -71,39 +71,32 @@ def sign_up():
     last_name = data.get('last_name', None)
     email = data.get('email', None)
     password = data.get('password', None)
-    gender = data.get('gender', None)
-    date_of_birth = data.get('date_of_birth', None)
-    role = data.get('role', None)
-    picture_file = data.get('display_picture', None)
+    # role = data.get('role', None)
 
     try:
         assert first_name is not None
         assert last_name is not None
         assert email is not None
         assert password is not None
-        assert gender is not None
-        assert date_of_birth is not None
-        assert role is not None
+        # assert role is not None
     except AssertionError:
         return jsonify({
             "message": "Bad Request",
             "error": "Missing Field"
         }), 400
     try:
-        role = Roles.query.filter_by(role=role).first_or_404()
+        # role = Roles.query.filter_by(role=role).first_or_404()
         hashed_password = generate_password_hash(password)
-        new_user = Users(email=email, password=hashed_password,
-                         role_id=role.id, access_token=None, refresh_token=None)
+        new_user = Users(
+            email=email,
+            password=hashed_password,
+            )
         new_user.insert()
-        if picture_file:
-            picture_url = convert_pic_to_link(picture_file)
-            new_user_profile = Profiles(user_id=new_user.id, first_name=first_name,
-                                        last_name=last_name,
-                                        date_of_birth=date_of_birth, gender=gender, display_picture=picture_url)
-            new_user_profile.insert()
-        new_user_profile = Profiles(user_id=new_user.id, first_name=first_name,
-                                    last_name=last_name,
-                                    date_of_birth=date_of_birth, gender=gender)
+        new_user_profile = Profiles(
+            user_id=new_user.id,
+            first_name=first_name,
+            last_name=last_name,
+        )
         new_user_profile.insert()
         return redirect(url_for("login"))
         # return jsonify({
@@ -135,11 +128,11 @@ def login():
     req = request.form
     email = req.get("email")
     password = req.get("password")
-    role = req.get("role")
+    # role = req.get("role")
 
     database_data = query_one_filtered(Users, email=email)
 
-    if not email or not password or not role:
+    if not email or not password:
         return jsonify(
             {
                 "error": "Bad Request",
@@ -159,16 +152,18 @@ def login():
             fresh=True,
             expires_delta=datetime.timedelta(minutes=15),
             additional_claims={
-                "role": database_data["role"]
+                "role": database_data["role_id"]
             }
         )
         refresh_token = create_refresh_token(identity=database_data["email"])
+        role = query_one_filtered(Roles, id=database_data["role_id"])
         return jsonify(
             {
                 "message": "login Successful",
                 "data": {
                     "access_token": access_token,
-                    "refresh_token": refresh_token
+                    "refresh_token": refresh_token,
+                    "role": role
                 }
             }
         ), 201
@@ -192,6 +187,7 @@ def me():
     return jsonify(
         id=current_user.id,
         email=current_user.email,
+        role=current_user.role_id,
     )
 
 
@@ -209,7 +205,15 @@ def refresh():
     :return: JSON response containing the new access token.
     """
     identity = get_jwt_identity()
-    access_token = create_access_token(identity=identity)
+    database_data = query_one_filtered(Users, email=identity)
+    access_token = create_access_token(
+        identity=identity,
+        fresh=True,
+        expires_delta=datetime.timedelta(minutes=15),
+        additional_claims={
+            "role": database_data["role_id"]
+        }
+    )
     return jsonify(access_token=access_token)
 
 
@@ -308,10 +312,11 @@ def callback():
     userinfo_response = requests.get(uri, headers=headers, data=body)
 
     print(userinfo_response.json())
+    print(f["access_token"])
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
-        picture = userinfo_response.json()["picture"]
+        # picture = userinfo_response.json()["picture"]
         first_name = userinfo_response.json()["given_name"]
         last_name = userinfo_response.json()["family_name"]
     else:
@@ -322,7 +327,6 @@ def callback():
             id=unique_id,
             email=users_email,
             password="",
-            role_id="",
             refresh_token=f["refresh_token"],
             access_token=f["access_token"],
         )
@@ -330,18 +334,30 @@ def callback():
             user_id=new_user.id,
             first_name=first_name,
             last_name=last_name,
-            date_of_birth="",
-            display_picture=picture,
         )
-    except:
-        pass
+        new_user.insert()
+        new_profile.insert()
+        return jsonify(
+            {
+                "message": "login successful",
+                "date": {
+                    "access_token": f["access_toke"],
+                    "refresh_token": f["refresh_token"],
+                    "role": None
+                }
+            }
+        ), 201
 
-    # Create a user in your database with the information you just got from Google
-    # Begin user session by logging the user in
-    login_user("")  # the user object  this will throw an error, because of the empty
+    except Exception as exc:
+        print(exc)
+        return jsonify(
+            {
+                "message": "something went wrong",
+                "error": "Internal server Error"
+            }
+        ), 500
 
-    # Send user back to homepage
-    return redirect(url_for("index"))  # home page or whatever the flow allows
+
 
 
 # WORKS
@@ -374,4 +390,3 @@ def google_login():
 
     # Redirect to the Google login URI
     return redirect(login_uri)
-

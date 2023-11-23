@@ -1,6 +1,7 @@
 from kluster.models.base import BaseModel
 from kluster import db
 from kluster.models.users import Users
+from kluster.models.roles import Roles
 
 
 class Permissions(BaseModel):
@@ -9,6 +10,8 @@ class Permissions(BaseModel):
     permission = db.Column(db.Enum('doctor', 'patient', name="USER_ROLE"),
                            nullable=False)
     role_id = db.Column(db.String(60), db.ForeignKey("users.id"))
+    Roles = db.relationship("Roles", backref=db.backref("Permissions", lazy=True),  # noqa E501
+                                  cascade="all, delete-orphan")
 
     def __init__(self, permission, role_id):
         """Initialize Profiles model

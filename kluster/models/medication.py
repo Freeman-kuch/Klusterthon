@@ -1,5 +1,6 @@
 from kluster import db
 from kluster.models.base import BaseModel
+from kluster.models.users import Users
 
 
 class Medication(BaseModel):

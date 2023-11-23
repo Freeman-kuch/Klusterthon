@@ -7,17 +7,17 @@ class Users(BaseModel, UserMixin):
     """Users model for the users table"""
     __tablename__ = "users"
     email = db.Column(db.String(255), nullable=False, unique=True)
-    password = db.Column(db.String(255), nullable=False)
+    password = db.Column(db.String(255), nullable=True)
     role_id = db.Column(db.String(255), db.ForeignKey("roles.id"),
-                        nullable=False, unique=True)
-    refresh_token = db.Column(db.String(255), nullable=True)
-    access_token = db.Column(db.String(255), nullable=True)
+                        nullable=True, unique=True)
+    refresh_token = db.Column(db.String(255), nullable=False)
+    access_token = db.Column(db.String(255), nullable=False)
     # relationships specification
-    profile = db.relationship("Profile", backref=db.backref("users", lazy=True),
+    profile = db.relationship("Profiles", backref=db.backref("users", lazy=True),
                               cascade="all, delete-orphan")
 
-    def __init__(self, email: str, password: str, role_id: str,
-                 refresh_token: str = None, access_token: str = None, **kwargs):
+    def __init__(self, email: str, password: str,
+                 refresh_token: str = None, access_token: str = None, role_id: str = None, **kwargs):
         super().__init__()
         self.email = email
         self.password = password
