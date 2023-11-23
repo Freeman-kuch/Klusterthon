@@ -4,7 +4,7 @@ from flask import Blueprint, request, jsonify, redirect, url_for
 from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
-from werkzeug.security import generate_password_hash, check_password_hash,
+from werkzeug.security import generate_password_hash, check_password_hash
 from kluster import jwt
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, current_user, get_jwt_identity
 
