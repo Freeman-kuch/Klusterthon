@@ -4,6 +4,8 @@ from kluster.models.users import Users
 from datetime import datetime
 
 
+
+
 class Profiles(BaseModel):
     """Profiles model"""
     __tablename__ = 'profiles'
@@ -32,7 +34,7 @@ class Profiles(BaseModel):
     address = db.Column(db.String(100))
     allergies = db.Column(db.String(100), nullable=True)
     age = db.Column(db.Integer, nullable=False)
-    display_picture = db.Column(db.String(100))
+    display_picture = db.Column(db.String(255))
 
     user = db.relationship("users", backref=db.backref("profiles", lazy=True), cascade="all, delete")
 

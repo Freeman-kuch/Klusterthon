@@ -1,6 +1,11 @@
 from kluster import db
-# from kluster.errors.error_handler import CustomError
 from datetime import datetime
+from cloudinary.uploader import upload
+
+
+def convert_pic_to_link(picture) -> str:
+    r = upload(picture, use_filename=True)
+    return r.get("url")
 
 
 def query_one_filtered(table, **kwargs):

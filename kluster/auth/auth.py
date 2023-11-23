@@ -13,7 +13,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
-from kluster.helpers import query_one_filtered
+from kluster.helpers import convert_pic_to_link
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 
@@ -28,8 +28,8 @@ def load_user(user_id: str) -> str | None:
     user = db.query_one_filtered(user_id)
     return user if user else None
 
-
-login_manager.login_view = "google-login"
+#
+# login_manager.login_view = "google-login"
 
 
 @auth.route('/sign_up', methods=['POST'])
@@ -43,6 +43,7 @@ def sign_up():
     gender = data.get('gender', None)
     date_of_birth = data.get('date_of_birth', None)
     role = data.get('role', None)
+    picture_file = data.get('display_picture', None)
 
     try:
         assert first_name is not None
@@ -61,8 +62,14 @@ def sign_up():
         role = Roles.query.filter_by(role=role).first_or_404()
         hashed_password = generate_password_hash(password)
         new_user = Users(email=email, password=hashed_password,
-                         role_id=role.id)
+                         role_id=role.id, access_token="", refresh_token="")
         new_user.insert()
+        if picture_file:
+            picture_url = convert_pic_to_link(picture_file)
+            new_user_profile = Profiles(user_id=new_user.id, first_name=first_name,
+                                        last_name=last_name,
+                                        date_of_birth=date_of_birth, gender=gender, display_picture=picture_url)
+            new_user_profile.insert()
         new_user_profile = Profiles(user_id=new_user.id, first_name=first_name,
                                     last_name=last_name,
                                     date_of_birth=date_of_birth, gender=gender)
@@ -95,7 +102,7 @@ def callback():
         redirect_url=request.base_url,
         code=code
     )
-    print(token_url, headers, body)
+    # print(token_url, headers, body)
     token_response = requests.post(
         token_url,  # https://oauth2.googleapis.com/token
         headers=headers,  # {'Content-Type': 'application/x-www-form-urlencoded'}
@@ -108,7 +115,7 @@ def callback():
 
     # Parse the tokens for user information
     f = client.parse_request_body_response(json.dumps(token_response.json()))
-    print(f["access_token"], f)
+    # print(f["access_token"], f)
 
     user_info_endpoint = requests.get(
         "https://accounts.google.com/.well-known/openid-configuration"
@@ -120,7 +127,7 @@ def callback():
     # You want to make sure their email is verified.
     # The user authenticated with Google, authorized your
     # app, and now you've verified their email through Google!
-    # print(userinfo_response.json())
+    print(userinfo_response.json())
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
