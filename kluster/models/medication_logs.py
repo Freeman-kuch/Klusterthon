@@ -9,17 +9,16 @@ class MedicationLogs(BaseModel):
     __tablename__ = 'medication_logs'
     user_id = db.Column(db.String(60), db.ForeignKey('users.id'))
     medication_id = db.Column(db.String(60), db.ForeignKey('medication.id'))
-    
-    user = db.relationship("users", backref=db.backref("medication_logs", lazy=True), cascade="all, delete-orphan")
-    medication = db.relationship("medication", backref=db.backref("medication_logs", lazy=True),
-                                 cascade="all, delete-orphan")
-
     time_taken = db.Column(db.DateTime, nullable=False)
     taken_status = db.Column(db.Boolean, nullable=False)
     scheduled_time = db.Column(db.DateTime, nullable=False)
     notes = db.Column(db.String(255), nullable=True)
     reminder_sent = db.Column(db.Boolean, nullable=False, default=False)
     acknowledged = db.Column(db.Boolean, nullable=False, default=False)
+
+    user = db.relationship("users", backref=db.backref("medication_logs", lazy=True), cascade="all, delete-orphan")
+    medication = db.relationship("medication", backref=db.backref("medication_logs", lazy=True),
+                                 cascade="all, delete-orphan")
 
     # we already have dosage for this stiil need?
     # quantity_taken = db.Column(db.Float, nullable=True)

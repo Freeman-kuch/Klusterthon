@@ -10,8 +10,8 @@ class Users(BaseModel, UserMixin):
     password = db.Column(db.String(255), nullable=True)
     role_id = db.Column(db.String(255), db.ForeignKey("roles.id"),
                         nullable=True, unique=True)
-    refresh_token = db.Column(db.String(255), nullable=False)
-    access_token = db.Column(db.String(255), nullable=False)
+    refresh_token = db.Column(db.String(255), nullable=True)
+    access_token = db.Column(db.String(255), nullable=True)
     # relationships specification
     profile = db.relationship("Profiles", backref=db.backref("users", lazy=True),
                               cascade="all, delete-orphan")
@@ -28,18 +28,15 @@ class Users(BaseModel, UserMixin):
             self.id = user_id
 
     def __repr__(self):
-        return {
-            "id": self.id,
-            "email": self.email,
-            "role_id": self.role_id,
-            "created_at": self.created_at,
-            "updated_at": self.updated_at,
-        }
+        return (f"<User(id={self.id}, email={self.email}, role_id={self.role_id}, created_at={self.created_at}, "
+                f"updated_at={self.updated_at})>")
 
     def format(self):
         return {
             "id": self.id,
             "email": self.email,
             "created_at": self.created_at,
+            "role_id": self.role_id,
             "updated_at": self.updated_at,
+            "password": self.password
         }

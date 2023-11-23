@@ -53,7 +53,7 @@ def user_lookup_callback(_jwt_header, jwt_data) -> Dict | None:
     return query_one_filtered(Users, email=identity) or None
 
 
-@auth.route('/sign_up', methods=['POST'])
+@auth.route('/sign-up', methods=['POST'])
 def sign_up():
     """
     View function responsible for registering a new user.
@@ -98,12 +98,13 @@ def sign_up():
             last_name=last_name,
         )
         new_user_profile.insert()
-        return redirect(url_for("login"))
-        # return jsonify({
-        #     "message": "User created successfully",
-        #     "data": new_user.format()
-        # }), 201
+        # return redirect(url_for("/api/v1/auth/login"))
+        return jsonify({
+            "message": "User created successfully",
+            "data": new_user.format()
+        }), 201
     except Exception as error:
+        print(error)
         return jsonify({
             "message": "Sign up failed",
             "error": "internal server error"
@@ -126,20 +127,22 @@ def login():
              JSON response with an error message if the email or password is invalid.
     """
     req = request.form
-    email = req.get("email")
+    emails = req.get("email")
     password = req.get("password")
     # role = req.get("role")
 
-    database_data = query_one_filtered(Users, email=email)
+    database_data = query_one_filtered(Users, email=emails)
+    print(database_data.password)
+    print(database_data.format())
 
-    if not email or not password:
+    if not emails or not password:
         return jsonify(
             {
                 "error": "Bad Request",
                 "message": "Bad request parameters"
             }
         ), 400
-    if not database_data or check_password_hash(database_data["password"], password):
+    if not database_data or check_password_hash(database_data.password, password):
         return jsonify(
             {
                 "message": "Invalid Email or Password",
@@ -301,7 +304,6 @@ def callback():
 
     # Parse the tokens for user information
     f = client.parse_request_body_response(json.dumps(token_response.json()))
-    # print(f["access_token"], f)
 
     user_info_endpoint = requests.get(
         "https://accounts.google.com/.well-known/openid-configuration"
@@ -311,8 +313,6 @@ def callback():
     uri, headers, body = client.add_token(user_info_endpoint)
     userinfo_response = requests.get(uri, headers=headers, data=body)
 
-    print(userinfo_response.json())
-    print(f["access_token"])
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
         users_email = userinfo_response.json()["email"]
@@ -322,6 +322,15 @@ def callback():
     else:
         return "User email not available or not verified by Google.", 400
     try:
+        database_data = query_one_filtered(Users, id=unique_id)
+        print(database_data)
+        if database_data:
+            return jsonify(
+                {
+                    "error": "Bad Request",
+                    "message": "user Already Registered!"
+                }
+            ), 400
 
         new_user = Users(
             id=unique_id,
@@ -341,7 +350,7 @@ def callback():
             {
                 "message": "login successful",
                 "date": {
-                    "access_token": f["access_toke"],
+                    "access_token": f["access_token"],
                     "refresh_token": f["refresh_token"],
                     "role": None
                 }
