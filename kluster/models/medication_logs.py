@@ -4,8 +4,8 @@ import datetime
 
 class MedicationLogs(BaseModel):
     __tablename__ = 'medication_logs'
-    user_id = db.Column(db.Integer, db.ForeignKey('users.id'))
-    medication_id = db.Column(db.Integer, db.ForeignKey('medication.id'))
+    user_id = db.Column(db.String(60), db.ForeignKey('users.id'))
+    medication_id = db.Column(db.String(60), db.ForeignKey('medication.id'))
     
     user = db.relationship("users", backref=db.backref("medication_logs", lazy=True), cascade="all, delete-orphan")
     medication = db.relationship("medication", backref=db.backref("medication_logs", lazy=True), cascade="all, delete-orphan")
