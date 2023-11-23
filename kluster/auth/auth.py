@@ -1,12 +1,13 @@
 import datetime
+from typing import Dict
 
 from flask import Blueprint, request, jsonify, redirect, url_for
 from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
 from werkzeug.security import generate_password_hash, check_password_hash
-from kluster import login_manager, db
-from flask_jwt_extended import create_access_token, create_refresh_token
+from kluster import login_manager, db, jwt
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required
 
 import json
 import os
@@ -26,10 +27,16 @@ auth = Blueprint("authentication", __name__, url_prefix="/api/v1/auth")
 client = WebApplicationClient(os.environ.get("client_id"))
 
 
-@login_manager.user_loader
-def load_user(user_id: str) -> str | None:
-    user = db.query_one_filtered(user_id)
+@jwt.user_identity_loader
+def user_identity_lookup(email: str) -> str | None:
+    user = query_one_filtered(Users, email=email)
     return user if user else None
+
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data) -> Dict | None:
+    identity = jwt_data["sub"]
+    return query_one_filtered(Users, email=identity) or None
 
 
 #
@@ -242,7 +249,7 @@ def google_login():
 
 
 @auth.get("/logout")
-@login_required
+@jwt_required()
 def logout():
     logout_user()
     return "you have been logged out"  # landing page
