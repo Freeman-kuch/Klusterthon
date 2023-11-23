@@ -2,10 +2,12 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask import Flask
 from flask_login import LoginManager
+from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
 
 db = SQLAlchemy()
 login_manager = LoginManager()
+jwt = JWTManager()
 
 
 def create_app(config_class=AppConfig):
@@ -31,10 +33,14 @@ def create_app(config_class=AppConfig):
     # Initialize Flask-login Manager
     login_manager.init_app(app)
 
-    # Register blueprints
-
+    # Initialize JWT Manager
+    jwt.init_app(app)
+    
+    # blueprints imports
     from kluster.auth.auth import auth
     from kluster.errors.error_handler import error
+
+    # Register blueprints
 
     app.register_blueprint(auth)
     app.register_blueprint(error)

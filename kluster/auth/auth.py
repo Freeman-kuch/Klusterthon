@@ -1,21 +1,21 @@
+import json, os, requests, datetime
+from typing import Dict
 from flask import Blueprint, request, jsonify, redirect, url_for
 from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
-from werkzeug.security import generate_password_hash
-from kluster import login_manager, db
+from werkzeug.security import generate_password_hash, check_password_hash
+from kluster import login_manager, db, jwt
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, current_user
 
-import json
-import os
 from flask_login import (
-    current_user,
     login_required,
     login_user,
     logout_user,
 )
-from kluster.helpers import convert_pic_to_link
+from kluster.helpers import convert_pic_to_link, query_one_filtered
 from oauthlib.oauth2 import WebApplicationClient
-import requests
+
 
 auth = Blueprint("authentication", __name__, url_prefix="/api/v1/auth")
 
@@ -23,10 +23,17 @@ auth = Blueprint("authentication", __name__, url_prefix="/api/v1/auth")
 client = WebApplicationClient(os.environ.get("client_id"))
 
 
-@login_manager.user_loader
-def load_user(user_id: str) -> str | None:
-    user = db.query_one_filtered(user_id)
+@jwt.user_identity_loader
+def user_identity_lookup(email: str) -> Dict | None:
+    user = query_one_filtered(Users, email=email)
     return user if user else None
+
+
+@jwt.user_lookup_loader
+def user_lookup_callback(_jwt_header, jwt_data) -> Dict | None:
+    identity = jwt_data["sub"]
+    return query_one_filtered(Users, email=identity) or None
+
 
 #
 # login_manager.login_view = "google-login"
@@ -85,6 +92,66 @@ def sign_up():
         }), 500
 
 
+@auth.route("/login", methods=["POST"])
+def login():
+    req = request.form
+    email = req.get("email")
+    password = req.get("password")
+    role = req.get("role")
+
+    database_data = query_one_filtered(Users, email=email)
+
+    if not email or not password or not role:
+        return jsonify(
+            {
+                "error": "Bad Request",
+                "message": "Bad request parameters"
+            }
+        ), 400
+    if not database_data or check_password_hash(database_data["password"], password):
+        return jsonify(
+            {
+                "message": "Invalid Email or Password",
+                "error": "Bad Request"
+            }
+        ), 401
+    try:
+        access_token = create_access_token(
+            identity=database_data["email"],
+            fresh=True,
+            expires_delta=datetime.timedelta(minutes=15),
+            additional_claims={
+                "role": database_data["role"]
+            }
+        )
+        refresh_token = create_refresh_token(identity=database_data["email"])
+        return jsonify(
+            {
+                "message": "login Successful",
+                "data": {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token
+                }
+            }
+        ), 201
+    except Exception as exc:
+        jsonify(
+            {
+                "message": "something went wrong from the server",
+                "error": "Internal Server Error"
+            }
+        ), 500
+
+
+@auth.route("/me", methods=["GET"])
+@jwt_required()
+def me():
+    return jsonify(
+        id=current_user.id,
+        email=current_user.email,
+    )
+
+
 @auth.route("/google-login/callback")
 def callback():
     """ they will send you back tokens that will allow you to authenticate to other Google endpoints on
@@ -124,9 +191,7 @@ def callback():
     )
     uri, headers, body = client.add_token(user_info_endpoint)
     userinfo_response = requests.get(uri, headers=headers, data=body)
-    # You want to make sure their email is verified.
-    # The user authenticated with Google, authorized your
-    # app, and now you've verified their email through Google!
+
     print(userinfo_response.json())
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
@@ -189,7 +254,7 @@ def google_login():
 
 
 @auth.get("/logout")
-@login_required
+@jwt_required()
 def logout():
     logout_user()
-    return "you have been logged out" # landing page
+    return "you have been logged out"  # landing page
