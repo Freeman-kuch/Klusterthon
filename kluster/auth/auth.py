@@ -152,7 +152,7 @@ def refresh():
 
 
 
-@auth.get("/logout", methods=["DELETE"])
+@auth.delete("/logout")
 @jwt_required(verify_type=False)
 def logout():
     identity = current_user.id
