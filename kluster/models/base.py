@@ -21,6 +21,12 @@ class BaseModel(db.Model):
     created_at = db.Column(db.DateTime(), default=datetime.now, nullable=False)
     updated_at = db.Column(db.DateTime(), default=datetime.now, nullable=False)
 
+    def __init__(self):
+      self.id = generate_uuid()
+      self.createdAt = datetime.utcnow()
+      self.updatedAt = datetime.utcnow()
+
+
     def insert(self):
         """Insert the current object into the database"""
         db.session.add(self)
