@@ -4,15 +4,10 @@ from flask import Blueprint, request, jsonify, redirect, url_for
 from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
-from werkzeug.security import generate_password_hash, check_password_hash
-from kluster import login_manager, db, jwt
-from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, current_user
+from werkzeug.security import generate_password_hash, check_password_hash,
+from kluster import jwt
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, current_user, get_jwt_identity
 
-from flask_login import (
-    login_required,
-    login_user,
-    logout_user,
-)
 from kluster.helpers import convert_pic_to_link, query_one_filtered
 from oauthlib.oauth2 import WebApplicationClient
 
@@ -33,10 +28,6 @@ def user_identity_lookup(email: str) -> Dict | None:
 def user_lookup_callback(_jwt_header, jwt_data) -> Dict | None:
     identity = jwt_data["sub"]
     return query_one_filtered(Users, email=identity) or None
-
-
-#
-# login_manager.login_view = "google-login"
 
 
 @auth.route('/sign_up', methods=['POST'])
@@ -69,7 +60,7 @@ def sign_up():
         role = Roles.query.filter_by(role=role).first_or_404()
         hashed_password = generate_password_hash(password)
         new_user = Users(email=email, password=hashed_password,
-                         role_id=role.id, access_token="", refresh_token="")
+                         role_id=role.id, access_token=None, refresh_token=None)
         new_user.insert()
         if picture_file:
             picture_url = convert_pic_to_link(picture_file)
@@ -81,10 +72,11 @@ def sign_up():
                                     last_name=last_name,
                                     date_of_birth=date_of_birth, gender=gender)
         new_user_profile.insert()
-        return jsonify({
-            "message": "User created successfully",
-            "data": new_user.format()
-        }), 201
+        return redirect(url_for("login"))
+        # return jsonify({
+        #     "message": "User created successfully",
+        #     "data": new_user.format()
+        # }), 201
     except Exception as error:
         return jsonify({
             "message": "Sign up failed",
@@ -150,6 +142,40 @@ def me():
         id=current_user.id,
         email=current_user.email,
     )
+
+@auth.route("/refresh", methods=["POST"])
+@jwt_required(refresh=True)
+def refresh():
+    identity = get_jwt_identity()
+    access_token = create_access_token(identity=identity)
+    return jsonify(access_token=access_token)
+
+
+
+@auth.get("/logout", methods=["DELETE"])
+@jwt_required(verify_type=False)
+def logout():
+    identity = current_user.id
+    try:
+
+        user = query_one_filtered(Users, id=identity)
+        user["access_token"] = None
+        user["refresh_token"] = None
+        user.update()
+        return jsonify(
+            {
+                "message":"you have been logged out",
+            }
+        ), 204
+
+    except Exception as e:
+        print(e)
+        return jsonify(
+            {
+                "message":"something went Wrong will loggin this user out",
+                "error": "Internal Server Error"
+            }
+        ), 500
 
 
 @auth.route("/google-login/callback")
@@ -252,9 +278,3 @@ def google_login():
     # Redirect to the Google login URI
     return redirect(login_uri)
 
-
-@auth.get("/logout")
-@jwt_required()
-def logout():
-    logout_user()
-    return "you have been logged out"  # landing page
