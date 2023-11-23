@@ -1,9 +1,12 @@
+import datetime
+
 from flask import Blueprint, request, jsonify, redirect, url_for
 from kluster.models.users import Users
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
-from werkzeug.security import generate_password_hash
+from werkzeug.security import generate_password_hash, check_password_hash
 from kluster import login_manager, db
+from flask_jwt_extended import create_access_token, create_refresh_token
 
 import json
 import os
@@ -13,7 +16,7 @@ from flask_login import (
     login_user,
     logout_user,
 )
-from kluster.helpers import convert_pic_to_link
+from kluster.helpers import convert_pic_to_link, query_one_filtered
 from oauthlib.oauth2 import WebApplicationClient
 import requests
 
@@ -27,6 +30,7 @@ client = WebApplicationClient(os.environ.get("client_id"))
 def load_user(user_id: str) -> str | None:
     user = db.query_one_filtered(user_id)
     return user if user else None
+
 
 #
 # login_manager.login_view = "google-login"
@@ -85,6 +89,57 @@ def sign_up():
         }), 500
 
 
+@auth.route("/login", methods=["POST"])
+def login():
+    req = request.form
+    email = req.get("email")
+    password = req.get("password")
+    role = req.get("role")
+
+    database_data = query_one_filtered(Users, email=email)
+
+    if not email or not password or not role:
+        return jsonify(
+            {
+                "error": "Bad Request",
+                "message": "Bad request parameters"
+            }
+        ), 400
+    if not database_data or check_password_hash(database_data["password"], password):
+        return jsonify(
+            {
+                "message": "Invalid Email or Password",
+                "error": "Bad Request"
+            }
+        ), 401
+    try:
+        access_token = create_access_token(
+            identity=database_data["email"],
+            fresh=True,
+            expires_delta=datetime.timedelta(minutes=15),
+            additional_claims={
+                "role": database_data["role"]
+            }
+        )
+        refresh_token = create_refresh_token(identity=database_data["email"])
+        return jsonify(
+            {
+                "message": "login Successful",
+                "data": {
+                    "access_token": access_token,
+                    "refresh_token": refresh_token
+                }
+            }
+        ), 201
+    except Exception as exc:
+        jsonify(
+            {
+                "message": "something went wrong from the server",
+                "error": "Internal Server Error"
+            }
+        ), 500
+
+
 @auth.route("/google-login/callback")
 def callback():
     """ they will send you back tokens that will allow you to authenticate to other Google endpoints on
@@ -124,9 +179,7 @@ def callback():
     )
     uri, headers, body = client.add_token(user_info_endpoint)
     userinfo_response = requests.get(uri, headers=headers, data=body)
-    # You want to make sure their email is verified.
-    # The user authenticated with Google, authorized your
-    # app, and now you've verified their email through Google!
+
     print(userinfo_response.json())
     if userinfo_response.json().get("email_verified"):
         unique_id = userinfo_response.json()["sub"]
@@ -192,4 +245,4 @@ def google_login():
 @login_required
 def logout():
     logout_user()
-    return "you have been logged out" # landing page
+    return "you have been logged out"  # landing page
