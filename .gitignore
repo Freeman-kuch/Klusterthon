@@ -82,7 +82,7 @@ celerybeat-schedule
 
 # dotenv
 .env
-
+.client_secret_87619606914-9ipquel4ov7ah31468gj3a2o0o2jr5rt.apps.googleusercontent.com.json
 # virtualenv
 .venv
 venv/

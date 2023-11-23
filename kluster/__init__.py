@@ -1,11 +1,16 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask import Flask
+from flask_login import LoginManager
+from flask_jwt_extended import JWTManager
+from kluster.config import AppConfig
 
 db = SQLAlchemy()
+login_manager = LoginManager()
+jwt = JWTManager()
 
 
-def create_app(config_class=None):
+def create_app(config_class=AppConfig):
     """
     Create a new instance of the app with the given configuration.
 
@@ -25,10 +30,20 @@ def create_app(config_class=None):
     # Initialize SQLAlchemy
     db.init_app(app)
 
-    # register blueprints
+    # Initialize Flask-login Manager
+    login_manager.init_app(app)
+
+    # Initialize JWT Manager
+    jwt.init_app(app)
+    
+    # blueprints imports
     from kluster.auth.auth import auth
+    from kluster.errors.error_handler import error
+
+    # Register blueprints
 
     app.register_blueprint(auth)
+    app.register_blueprint(error)
 
     # create db tables from models if not exists
     with app.app_context():
