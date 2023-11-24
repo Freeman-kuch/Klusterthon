@@ -92,6 +92,7 @@ def sign_up():
             email=email,
             password=hashed_password,
             )
+        print("here 1")
         new_user.insert()
         new_user_profile = Profiles(
             user_id=new_user.id,

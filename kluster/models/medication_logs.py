@@ -16,8 +16,8 @@ class MedicationLogs(BaseModel):
     reminder_sent = db.Column(db.Boolean, nullable=False, default=False)
     acknowledged = db.Column(db.Boolean, nullable=False, default=False)
 
-    user = db.relationship("users", backref=db.backref("medication_logs", lazy=True), cascade="all, delete-orphan")
-    medication = db.relationship("medication", backref=db.backref("medication_logs", lazy=True),
+    user = db.relationship("Users", backref=db.backref("medication_logs", lazy=True), cascade="all, delete-orphan")
+    medication = db.relationship("Medication", backref=db.backref("medication_logs", lazy=True),
                                  cascade="all, delete-orphan")
 
     # we already have dosage for this stiil need?

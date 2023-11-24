@@ -1,9 +1,6 @@
 from kluster import db
 from kluster.models.base import BaseModel
-from kluster.models.users import Users
 from datetime import datetime
-
-
 
 
 class Profiles(BaseModel):
@@ -49,8 +46,8 @@ class Profiles(BaseModel):
             display_picture: str = None,
             blood_group: str = None,
             allergies: str = None,
-            age : int = None
-            ):
+            age: int = None
+    ):
         """Initialize Profiles model
 
         Args:

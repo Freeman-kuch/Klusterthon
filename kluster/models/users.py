@@ -1,9 +1,9 @@
 from kluster import db
 from kluster.models.base import BaseModel
-from flask_login import UserMixin
+from kluster.models.profiles import Profiles
 
 
-class Users(BaseModel, UserMixin):
+class Users(BaseModel):
     """Users model for the users table"""
     __tablename__ = "users"
     email = db.Column(db.String(255), nullable=False, unique=True)
@@ -13,8 +13,7 @@ class Users(BaseModel, UserMixin):
     refresh_token = db.Column(db.String(255), nullable=True)
     access_token = db.Column(db.String(255), nullable=True)
     # relationships specification
-    profile = db.relationship("Profiles", backref=db.backref("users", lazy=True),
-                              cascade="all, delete-orphan")
+    profile = db.relationship("Profiles", backref=db.backref("users", lazy=True), cascade="all, delete-orphan")
 
     def __init__(self, email: str, password: str,
                  refresh_token: str = None, access_token: str = None, role_id: str = None, **kwargs):
