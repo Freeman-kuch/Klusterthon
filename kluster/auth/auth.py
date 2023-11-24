@@ -87,6 +87,7 @@ def sign_up():
     try:
         # role = Roles.query.filter_by(role=role).first_or_404()
         hashed_password = generate_password_hash(password)
+        print("here")
         new_user = Users(
             email=email,
             password=hashed_password,

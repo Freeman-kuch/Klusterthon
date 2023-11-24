@@ -39,11 +39,13 @@ def create_app(config_class=AppConfig):
     # blueprints imports
     from kluster.auth.auth import auth
     from kluster.errors.error_handler import error
+    from kluster.routes.patients import patients
 
     # Register blueprints
 
     app.register_blueprint(auth)
     app.register_blueprint(error)
+    app.register_blueprint(patients)
 
     # create db tables from models if not exists
     with app.app_context():

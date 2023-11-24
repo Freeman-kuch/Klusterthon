@@ -5,7 +5,7 @@ from kluster.models.users import Users
 
 class Medication(BaseModel):
     __tablename__ = "medications"
-    name = db.Columna(db.String(255), nullable=False)
+    name = db.Column(db.String(255), nullable=False)
     patient_id = db.Column(db.String(255), db.ForeignKey('users.id'), nullable=False, unique=True,)
     prescribed_by = db.Column(db.String(255), db.ForeignKey('users.id'), nullable=False, unique=True,)
     dosage = db.Column(db.Enum(
