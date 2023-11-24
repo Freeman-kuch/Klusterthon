@@ -22,8 +22,6 @@ class Medication(BaseModel):
     start_date = db.Column(db.DateTime(), nullable=False)
     end_date = db.Column(db.DateTime(), nullable=False)
 
-    # user = db.relationship("Users", backref=db.backref("Medications", lazy=True), cascade="all, delete-orphan")
-
     user = db.relationship("Users", foreign_keys="[Medication.patient_id]",
                            backref=db.backref("medications_patient", lazy="dynamic"), cascade="all, delete-orphan", single_parent=True)
     prescribed_by_user = db.relationship("Users", foreign_keys="[Medication.prescribed_by]",
