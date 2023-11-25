@@ -27,5 +27,16 @@ def new_medication_schedule():
         new_medication.description = description
         new_medication.update()
     # create a schedule
-    new_schedule = Scheduler()
-    new_schedule.run_continuously()
+    try:
+        new_schedule = Scheduler()
+        new_schedule.run_continuously()
+    except Exception as error:
+        return jsonify({
+            "message": "Medication could not be scheduled",
+            "error": "internal server error"
+        }), 500
+
+    return jsonify({
+        "message": "medication scheduled successfully",
+        "data": new_medication.to_dict()
+    })
