@@ -43,3 +43,8 @@ class Scheduler:
         continuous_thread = ScheduleThread()
         continuous_thread.start()
         return cease_continuous_run
+    
+    def start_schedule(self):
+        """start the medication schedule"""
+        self.run_continuously()
+        schedule.every(60 * 60).do(something())
