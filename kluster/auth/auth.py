@@ -92,7 +92,7 @@ def sign_up():
         new_user = Users(
             email=email,
             password=hashed_password,
-            )
+        )
         # print("here 1")
         new_user.insert()
         new_user_profile = Profiles(
@@ -337,13 +337,27 @@ def callback():
         refresh_token = create_refresh_token(identity=users_email)
         database_data = query_one_filtered(Users, id=unique_id)
         if database_data:
-            print(database_data.to_dict())
+            # print(database_data.to_dict())
+            updating = Users(
+                id=unique_id,
+                email=users_email,
+                password="",
+                google_refresh_token=f["refresh_token"],
+                google_access_token=f["access_token"],
+                access_token=access_token,
+                refresh_token=refresh_token
+            )
+            updating.update()
             return jsonify(
                 {
-                    "error": "Bad Request",
-                    "message": "user Already Registered!"
+                    # "error": "Bad Request",
+                    "message": "successful",
+                    "data": {
+                        "access_token": access_token,
+                        "refresh_token": refresh_token
+                    }
                 }
-            ), 400
+            ), 200
         new_user = Users(
             id=unique_id,
             email=users_email,
@@ -379,8 +393,6 @@ def callback():
                 "error": "Internal server Error"
             }
         ), 500
-
-
 
 
 # WORKS
