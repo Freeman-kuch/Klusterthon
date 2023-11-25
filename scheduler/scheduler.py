@@ -1,7 +1,6 @@
 """Module for scheduler base functions"""
 import schedule
 import time
-import requests
 import threading
 import json
 

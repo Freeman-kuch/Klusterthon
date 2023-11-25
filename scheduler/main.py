@@ -1,4 +1,4 @@
-from test import test
+from scheduler.test import test
 import asyncio
 
 async def main():
