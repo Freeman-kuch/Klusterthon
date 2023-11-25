@@ -45,7 +45,7 @@ def profile(email:str) -> None:
             if profile:
                 return jsonify(profile.format()), 200
             else:
-                return "profile not found", 404
+                return standard_response("profile not found", 404)
         
     if request.method == "PUT":
             #update profile
@@ -59,11 +59,11 @@ def profile(email:str) -> None:
                             "data":profile.format(),
                     }), 200)
             else:
-                return "profile not found", 404
+                return standard_response("profile not found", 404)
             
     if request.method == "DELETE":
             if profile:
                 profile.delete()
-                return "profile deleted successfully", 204
+                return standard_response("profile deleted successfully", 204)
             else:
-                return "profile not found", 404
+                return standard_response("profile not found", 404)

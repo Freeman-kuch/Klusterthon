@@ -28,8 +28,8 @@ class Profiles(BaseModel):
     ),
         nullable=True
     )
-    address = db.Column(db.String(100), nullable=True)
-    allergies = db.Column(db.String(100), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
+    allergies = db.Column(db.String(1024), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     display_picture = db.Column(db.String(255), nullable=True)
 
