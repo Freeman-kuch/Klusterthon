@@ -88,10 +88,14 @@ class Profiles(BaseModel):
         """Format the object's attributes as a dictionary"""
         return ({
             "id": self.id,
-            "user_id": self.user_id_id,
+            "user_id": self.user_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "gender": self.gender,
+            "date_of_birth": self.date_of_birth,
             "address": self.address,
+            "blood_group": self.blood_group,
+            "allergies": self.allergies,
+            "age": self.age,
             "display_picture": self.display_picture
         })
