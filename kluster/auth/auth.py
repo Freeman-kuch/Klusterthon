@@ -329,24 +329,21 @@ def callback():
     else:
         return "User email not available or not verified by Google.", 400
     try:
+        access_token = create_access_token(
+            identity=users_email,
+            fresh=True,
+            expires_delta=datetime.timedelta(minutes=15),
+        )
+        refresh_token = create_refresh_token(identity=users_email)
         database_data = query_one_filtered(Users, id=unique_id)
         if database_data:
+            print(database_data.to_dict())
             return jsonify(
                 {
                     "error": "Bad Request",
                     "message": "user Already Registered!"
                 }
             ), 400
-        # print(len(unique_id))
-        # print(len(f["refresh_token"]))
-        # print(len(f["access_token"]))
-        print(users_email)
-        access_token = create_access_token(
-                identity=users_email,
-                fresh=True,
-                expires_delta=datetime.timedelta(minutes=15),
-            )
-        refresh_token = create_refresh_token(identity=users_email)
         new_user = Users(
             id=unique_id,
             email=users_email,
