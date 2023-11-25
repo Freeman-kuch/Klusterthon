@@ -31,39 +31,42 @@ def update_profile_fields(profile, data):
 
 @profile_bp.route("/<string:email>", methods=["GET","PUT","DELETE"])
 def profile(email:str) -> None:
+    try:
 
-    data = request.form
-    user = query_one_filtered(Users, email=email)
+        data = request.form
+        user = query_one_filtered(Users, email=email)
 
-    if not user:
-        return "User not found", 404
-    
-    profile = query_one_filtered(Profiles, user_id=user.id)
-
-    if request.method == "GET":
-
-            if profile:
-                return jsonify(profile.format()), 200
-            else:
-                return "profile not found", 404
+        if not user:
+            return "User not found", 404
         
-    if request.method == "PUT":
-            #update profile
-            if profile:
-                update_profile_fields(profile, data)
-                profile.update()
-                return (
-                    jsonify(
-                        {
-                            "Message": "Profile updated successfully",
-                            "data":profile.format(),
-                    }), 200)
-            else:
-                return "profile not found", 404
+        profile = query_one_filtered(Profiles, user_id=user.id)
+
+        if request.method == "GET":
+
+                if profile:
+                    return jsonify(profile.format()), 200
+                else:
+                    return standard_response("profile not found", 404)
             
-    if request.method == "DELETE":
-            if profile:
-                profile.delete()
-                return "profile deleted successfully", 204
-            else:
-                return "profile not found", 404
+        if request.method == "PUT":
+                #update profile
+                if profile:
+                    update_profile_fields(profile, data)
+                    profile.update()
+                    return (
+                        jsonify(
+                            {
+                                "Message": "Profile updated successfully",
+                                "data":profile.format(),
+                        }), 200)
+                else:
+                    return standard_response("profile not found", 404)
+                
+        if request.method == "DELETE":
+                if profile:
+                    profile.delete()
+                    return standard_response("profile deleted successfully", 204)
+                else:
+                    return standard_response("profile not found", 404)
+    except Exception as e:
+        return standard_response(f"An error occured :{str(e)}", 500)
