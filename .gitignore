@@ -75,7 +75,7 @@ target/
 # pyenv
 .python-version
 
-# celery beat schedule file
+# celery beat scheduler file
 celerybeat-schedule
 
 # SageMath parsed files
