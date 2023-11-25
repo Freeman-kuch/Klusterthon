@@ -12,6 +12,7 @@ class AppConfig():
     JWT_SECRET_KEY = os.environ.get("JWT_SECRET_KEY")
     JWT_TOKEN_LOCATION = ["headers"]
     JWT_REFRESH_TOKEN_EXPIRES = timedelta(days=30)
+    JWT_IDENTITY_CLAIM = "sub"
     SQLALCHEMY_DATABASE_URI = os.environ.get("SQLALCHEMY_DATABASE_URI")
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     SQLALCHEMY_ECHO = False

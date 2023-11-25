@@ -22,7 +22,7 @@ client = WebApplicationClient(os.environ.get("client_id"))
 
 
 @jwt.user_identity_loader
-def user_identity_lookup(email: str) -> Dict | None:
+def user_identity_lookup(email: str) -> Dict | str:
     """
     Retrieves the user identity based on the provided email.
 
@@ -32,8 +32,8 @@ def user_identity_lookup(email: str) -> Dict | None:
     Returns:
         dict or None: The user with the specified email, represented as a dictionary. If no user is found, None is returned.
     """
-    user = query_one_filtered(Users, email=email)
-    return user if user else None
+    user = query_one_filtered(Users, email=email).to_dict()
+    return user["email"] if user else email
 
 
 @jwt.user_lookup_loader
@@ -50,7 +50,8 @@ def user_lookup_callback(_jwt_header, jwt_data) -> Dict | None:
                      None if no user with the specified email is found.
     """
     identity = jwt_data["sub"]
-    return query_one_filtered(Users, email=identity) or None
+    # print(identity)
+    return query_one_filtered(Users, email=identity).to_dict() or None
 
 
 @auth.route('/sign-up', methods=['POST'])
@@ -87,10 +88,12 @@ def sign_up():
     try:
         # role = Roles.query.filter_by(role=role).first_or_404()
         hashed_password = generate_password_hash(password)
+        # print("here")
         new_user = Users(
             email=email,
             password=hashed_password,
-            )
+        )
+        # print("here 1")
         new_user.insert()
         new_user_profile = Profiles(
             user_id=new_user.id,
@@ -154,9 +157,6 @@ def login():
             identity=database_data["email"],
             fresh=True,
             expires_delta=datetime.timedelta(minutes=15),
-            additional_claims={
-                "role": database_data["role_id"]
-            }
         )
         refresh_token = create_refresh_token(identity=database_data["email"])
         role = query_one_filtered(Roles, id=database_data["role_id"])
@@ -188,9 +188,9 @@ def me():
     :return: JSON object containing the current user's ID and email.
     """
     return jsonify(
-        id=current_user.id,
-        email=current_user.email,
-        role=current_user.role_id,
+        id=current_user.get("id"),
+        email=current_user.get("email"),
+        role=current_user.get("role_id"),
     )
 
 
@@ -207,17 +207,19 @@ def refresh():
 
     :return: JSON response containing the new access token.
     """
-    identity = get_jwt_identity()
-    database_data = query_one_filtered(Users, email=identity)
+    identify = get_jwt_identity()
+    database_data = query_one_filtered(Users, email=identify).to_dict()
     access_token = create_access_token(
-        identity=identity,
+        identity=identify,
         fresh=True,
         expires_delta=datetime.timedelta(minutes=15),
         additional_claims={
-            "role": database_data["role_id"]
+            "role": database_data.get("role_id", "")
         }
     )
-    return jsonify(access_token=access_token)
+    database_data["access_token"] = access_token
+    database_data.update()
+    return jsonify(access_token=access_token), 200
 
 
 @auth.delete("/logout")
@@ -237,11 +239,16 @@ def logout():
         Headers:
           Authorization: Bearer <access_token>
     """
-    identity = current_user.id
+    identity = current_user.get("id")
     try:
-        user = query_one_filtered(Users, id=identity)
+        print("here 1")
+        user = query_one_filtered(Users, id=identity).to_dict()
+        print("here 2")
         user["access_token"] = None
+        user["google_access_token"] = None
         user["refresh_token"] = None
+        user["google_refresh_token"] = None
+        print("here 3")
         user.update()
         return jsonify(
             {
@@ -322,22 +329,43 @@ def callback():
     else:
         return "User email not available or not verified by Google.", 400
     try:
+        access_token = create_access_token(
+            identity=users_email,
+            fresh=True,
+            expires_delta=datetime.timedelta(minutes=15),
+        )
+        refresh_token = create_refresh_token(identity=users_email)
         database_data = query_one_filtered(Users, id=unique_id)
-        print(database_data)
         if database_data:
+            # print(database_data.to_dict())
+            updating = Users(
+                id=unique_id,
+                email=users_email,
+                password="",
+                google_refresh_token=f["refresh_token"],
+                google_access_token=f["access_token"],
+                access_token=access_token,
+                refresh_token=refresh_token
+            )
+            updating.update()
             return jsonify(
                 {
-                    "error": "Bad Request",
-                    "message": "user Already Registered!"
+                    # "error": "Bad Request",
+                    "message": "successful",
+                    "data": {
+                        "access_token": access_token,
+                        "refresh_token": refresh_token
+                    }
                 }
-            ), 400
-
+            ), 200
         new_user = Users(
             id=unique_id,
             email=users_email,
             password="",
-            refresh_token=f["refresh_token"],
-            access_token=f["access_token"],
+            google_refresh_token=f["refresh_token"],
+            google_access_token=f["access_token"],
+            access_token=access_token,
+            refresh_token=refresh_token
         )
         new_profile = Profiles(
             user_id=new_user.id,
@@ -350,8 +378,8 @@ def callback():
             {
                 "message": "login successful",
                 "date": {
-                    "access_token": f["access_token"],
-                    "refresh_token": f["refresh_token"],
+                    "access_token": access_token,
+                    "refresh_token": refresh_token,
                     "role": None
                 }
             }
@@ -365,8 +393,6 @@ def callback():
                 "error": "Internal server Error"
             }
         ), 500
-
-
 
 
 # WORKS
