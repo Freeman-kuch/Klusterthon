@@ -28,8 +28,7 @@ def new_medication_schedule():
         new_medication.update()
     # create a schedule
     try:
-        new_schedule = Scheduler()
-        new_schedule.run_continuously()
+        Scheduler.run_continuously()
     except Exception as error:
         return jsonify({
             "message": "Medication could not be scheduled",
@@ -39,4 +38,4 @@ def new_medication_schedule():
     return jsonify({
         "message": "medication scheduled successfully",
         "data": new_medication.to_dict()
-    })
+    }), 200

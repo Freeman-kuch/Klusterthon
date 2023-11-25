@@ -12,7 +12,8 @@ class Scheduler:
         """Initialize the scheduler"""
         pass
 
-    def run_continuously(self):
+    @staticmethod
+    def run_continuously():
         """run a schedule indefinitely"""
         cease_continuous_run = threading.Event()
 
