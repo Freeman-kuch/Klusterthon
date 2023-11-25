@@ -105,11 +105,10 @@ def medication(user_id: str, medication_id: str) -> tuple[Response, int] | Respo
             ), 500
     
     try:
-        medication_obj = query_one_filtered(Medication, id=medication_id, patient_id=user_id)
-        # medication_obj = Medication.query.filter(
-        #     Medication.id == medication_id,
-        #     Medication.patient_id == user_id,
-        # ).first_or_404("Not Found")
+        medication_obj = Medication.query.filter(
+            Medication.id == medication_id,
+            Medication.patient_id == user_id,
+        ).first_or_404("Not Found")
         print(medication_obj.to_dict())
         print(type(medication_obj))
         medication_obj.delete()

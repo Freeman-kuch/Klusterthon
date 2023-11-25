@@ -17,8 +17,8 @@ def get_user_credentials(user_id: str) -> Dict | None:
     if isinstance(user_id, str):
         user_data = Users.query.filter_by(id=user_id).first_or_404()
         return {
-            "access_token": user_data["access_token"],
-            "refresh_Token": user_data["refresh_Token"],
+            "google_access_token": user_data["access_token"],
+            "google_refresh_Token": user_data["refresh_Token"],
             "token_uri": "https://oauth2.googleapis.com/token",
             "client_id": os.environ.get("client_id"),
             "client_secret": os.environ.get("client_secret"),
