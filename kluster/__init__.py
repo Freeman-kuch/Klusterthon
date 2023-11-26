@@ -38,8 +38,8 @@ def create_app(config_class=AppConfig):
         app.config.from_object(config_class)
 
     # Configure Celery inside the factory function
-    app.config['CELERY_BROKER_URL'] = 'amqps://hpqvcwpt:PkJ3t8n0N0oDgNwHZNrCjuyWuxvetK5c@rattlesnake.rmq.cloudamqp.com/hpqvcwpt'
-    app.config['CELERY_RESULT_BACKEND'] = 'amqps://hpqvcwpt:PkJ3t8n0N0oDgNwHZNrCjuyWuxvetK5c@rattlesnake.rmq.cloudamqp.com/hpqvcwpt'
+    app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'amqp://localhost:5672')
+    app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'rpc://')
     
     # Initialize Flask extensions
     CORS(app, supports_credentials=True)
