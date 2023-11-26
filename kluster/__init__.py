@@ -4,54 +4,65 @@ from flask import Flask
 from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
+from celery import Celery
+import os
 
 db = SQLAlchemy()
 login_manager = LoginManager()
 jwt = JWTManager()
 
+def make_celery(app):
+    celery = Celery(
+        app.import_name, 
+        backend=app.config['CELERY_RESULT_BACKEND'], 
+        broker=app.config['CELERY_BROKER_URL']
+    )
+    celery.conf.update(app.config)
+
+    class ContextTask(celery.Task):
+        def __call__(self, *args, **kwargs):
+            with app.app_context():
+                return self.run(*args, **kwargs)
+
+    celery.Task = ContextTask
+    return celery
 
 def create_app(config_class=AppConfig):
     """
     Create a new instance of the app with the given configuration.
-
     :param config_class: configuration class
     :return: app
     """
-    # Initialize Flask
     app = Flask(__name__)
     if config_class:
         app.config.from_object(config_class)
-    if app.config["SQLALCHEMY_DATABASE_URI"]:
-        print(f"using db")
 
-    # Initialize CORS
-    CORS(app, supports_credentials=True)
-
-    # Initialize SQLAlchemy
-    db.init_app(app)
-
-    # Initialize Flask-login Manager
-    login_manager.init_app(app)
-
-    # Initialize JWT Manager
-    jwt.init_app(app)
+    # Configure Celery inside the factory function
+    app.config['CELERY_BROKER_URL'] = 'amqps://hpqvcwpt:PkJ3t8n0N0oDgNwHZNrCjuyWuxvetK5c@rattlesnake.rmq.cloudamqp.com/hpqvcwpt'
+    app.config['CELERY_RESULT_BACKEND'] = 'amqps://hpqvcwpt:PkJ3t8n0N0oDgNwHZNrCjuyWuxvetK5c@rattlesnake.rmq.cloudamqp.com/hpqvcwpt'
     
-    # blueprints imports
+    # Initialize Flask extensions
+    CORS(app, supports_credentials=True)
+    db.init_app(app)
+    login_manager.init_app(app)
+    jwt.init_app(app)
+
+    # Import blueprints
     from kluster.auth.auth import auth
     from kluster.errors.error_handler import error
     from kluster.routes.patients import patients
     from kluster.profile.profile import profile_bp
 
     # Register blueprints
-
     app.register_blueprint(auth)
     app.register_blueprint(error)
     app.register_blueprint(patients)
     app.register_blueprint(profile_bp)
-
-    # create db tables from models if not exists
+    
+    # Create db tables if they do not exist
     with app.app_context():
-        print("creating tables")
         db.create_all()
 
     return app
+
+
