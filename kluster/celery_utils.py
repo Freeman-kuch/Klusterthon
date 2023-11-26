@@ -4,7 +4,7 @@ from celery import Celery
 import os 
 
 flask_app = Flask(__name__)
-    # Configure Celery inside the factory function
+# Configure Celery inside the factory function
 flask_app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'amqp://localhost:5672')
 flask_app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'rpc://')
 
