@@ -1,7 +1,6 @@
 from flask import Blueprint, request, jsonify, redirect, url_for
 
 
-
 from kluster import jwt
 from kluster.helpers import convert_pic_to_link, query_one_filtered
 from kluster.models.profiles import Profiles
