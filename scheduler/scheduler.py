@@ -5,15 +5,14 @@ import threading
 import json
 
 
-class Scheduler:
+class Reminder(schedule.Scheduler):
     """The scheduler class"""
 
     def __init__(self):
         """Initialize the scheduler"""
         pass
 
-    @staticmethod
-    def run_continuously():
+    def run_continuously(self):
         """run a schedule indefinitely"""
         cease_continuous_run = threading.Event()
 
