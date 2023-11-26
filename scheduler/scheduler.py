@@ -8,9 +8,10 @@ import json
 class Reminder(schedule.Scheduler):
     """The scheduler class"""
 
-    def __init__(self):
-        """Initialize the scheduler"""
-        pass
+    def __init__(self, name_of_drug):
+        """Initialize a reminder"""
+        super().__init__()
+        self.name_of_drug = name_of_drug
 
     def run_continuously(self):
         """run a schedule indefinitely"""
@@ -20,14 +21,14 @@ class Reminder(schedule.Scheduler):
             @classmethod
             def run(cls):
                 while not cease_continuous_run.is_set():
-                    interval = schedule.idle_seconds()
+                    interval = self.idle_seconds()
                     if interval is None:
                         break
                     elif interval > 0:
                         # sleep exactly the right amount of time
                         print(f"Time till Analytics reset: { interval } seconds")
                         time.sleep(interval)
-                    schedule.run_pending()
+                    self.run_pending()
                     cls.check_stop()
                 print("Terminating continuous")
 
@@ -43,7 +44,15 @@ class Reminder(schedule.Scheduler):
         continuous_thread.start()
         return cease_continuous_run
     
-    def start_schedule(self):
+    def start_schedule(self, interval):
         """start the medication schedule"""
+        possible_hours = {
+            "daily": 24,
+            "bi_daily": 12,
+            "tri_daily": 8,
+            "quad_daily": 6
+        }
+        if possible_hours[interval] == 24:
+            self.every().day.at().do()
+        self.every().hours.do()
         self.run_continuously()
-        schedule.every(60 * 60).do(something())
