@@ -8,6 +8,7 @@ from flask_mail import Mail
 
 db = SQLAlchemy()
 jwt = JWTManager()
+mail = Mail()
 
 
 def create_app(config_class=AppConfig):
@@ -24,7 +25,8 @@ def create_app(config_class=AppConfig):
     CORS(app, supports_credentials=True)
     db.init_app(app)
     jwt.init_app(app)
-    Mail(app)
+    mail.init_app(app)
+
 
     # Import blueprints
     from kluster.auth.auth import auth
@@ -32,6 +34,7 @@ def create_app(config_class=AppConfig):
     from kluster.routes.patients import patients
     from kluster.profile.profile import profile_bp
     from kluster.medications.medication import medication_bp
+    from kluster.notification.setup import notification
 
     # Register blueprints
     app.register_blueprint(auth)
@@ -39,6 +42,8 @@ def create_app(config_class=AppConfig):
     app.register_blueprint(patients)
     app.register_blueprint(profile_bp)
     app.register_blueprint(medication_bp)
+    app.register_blueprint(notification)
+
 
     # Create db tables if they do not exist
     with app.app_context():

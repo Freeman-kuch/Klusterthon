@@ -1,13 +1,14 @@
 from googleapiclient.discovery import build
 from google.oauth2.credentials import Credentials
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from typing import Dict
 from kluster.models.users import Users
-from kluster import db
+from kluster import db, mail
 from kluster.helpers import query_one_filtered
+from flask_mail import Message
 import os
 
-calendar = Blueprint("calender", __name__, url_prefix="/api/v1/calender")
+notification = Blueprint("notification", __name__, url_prefix="/api/v1/notification")
 
 
 # query the user DB for the access token of the user
@@ -27,7 +28,7 @@ def get_user_credentials(user_id: str) -> Dict | None:
     return None
 
 
-@calendar.route("/medications/<user_id>", methods=["POST"])
+@notification.route("/medications/<user_id>", methods=["POST"])
 def create_medication(user_id):
     try:
         calender_api = build('calendar', 'v3', credentials=get_user_credentials(user_id))
@@ -74,3 +75,22 @@ def create_medication(user_id):
                 "error": "Internal Server Error"
             }
         ), 500
+    
+
+@notification.route("/mailing")
+def testing():
+    if request.method == 'GET':
+        recipient = request.form['recipient']
+        subject = request.form['subject']
+        body = request.form['body']
+
+        msg = Message(subject, sender='your@gmail.com', recipients=[recipient])
+        msg.body = body
+
+        mail.send(msg)
+    return jsonify(
+        {
+            "message": 'Email sent!',
+            "data": "done",
+            }
+    ), 200

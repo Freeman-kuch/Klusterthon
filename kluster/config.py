@@ -23,8 +23,8 @@ class AppConfig():
         "Cloudinary_API_Secret") + "@" + os.environ.get("Cloudinary_Name")
     STANDARD_TIMEOUT = 1800
     MAIL_SERVER = 'smtp.gmail.com'
-    MAIL_PORT = 465
+    MAIL_PORT = 587
     MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
     MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
     MAIL_USE_TLS = True
-    MAIL_USE_SSL = True
+    MAIL_USE_SSL = False
