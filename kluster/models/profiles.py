@@ -28,8 +28,8 @@ class Profiles(BaseModel):
     ),
         nullable=True
     )
-    address = db.Column(db.String(100), nullable=True)
-    allergies = db.Column(db.String(100), nullable=True)
+    address = db.Column(db.String(255), nullable=True)
+    allergies = db.Column(db.String(1024), nullable=True)
     age = db.Column(db.Integer, nullable=True)
     display_picture = db.Column(db.String(255), nullable=True)
 
@@ -88,10 +88,14 @@ class Profiles(BaseModel):
         """Format the object's attributes as a dictionary"""
         return ({
             "id": self.id,
-            "user_id": self.user_id_id,
+            "user_id": self.user_id,
             "first_name": self.first_name,
             "last_name": self.last_name,
             "gender": self.gender,
+            "date_of_birth": self.date_of_birth,
             "address": self.address,
+            "blood_group": self.blood_group,
+            "allergies": self.allergies,
+            "age": self.age,
             "display_picture": self.display_picture
         })

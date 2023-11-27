@@ -8,23 +8,25 @@ import datetime
 class MedicationLogs(BaseModel):
     __tablename__ = 'medication_logs'
     user_id = db.Column(db.String(60), db.ForeignKey('users.id'))
-    medication_id = db.Column(db.String(60), db.ForeignKey('medication.id'))
-    time_taken = db.Column(db.DateTime, nullable=False)
+    medication_id = db.Column(db.String(60), db.ForeignKey('medications.id'))
+    time_taken = db.Column(db.DateTime, nullable=True)
     taken_status = db.Column(db.Boolean, nullable=False)
     scheduled_time = db.Column(db.DateTime, nullable=False)
     notes = db.Column(db.String(255), nullable=True)
     reminder_sent = db.Column(db.Boolean, nullable=False, default=False)
     acknowledged = db.Column(db.Boolean, nullable=False, default=False)
 
-    user = db.relationship("Users", backref=db.backref("medication_logs", lazy=True), cascade="all, delete-orphan")
-    medication = db.relationship("Medication", backref=db.backref("medication_logs", lazy=True),
-                                 cascade="all, delete-orphan")
+    # Relationship with Users
+    user = db.relationship("Users", backref=db.backref("medication_logs", lazy=True), cascade="all")
+
+    # Relationship with Medication
+    medication = db.relationship("Medication", backref=db.backref("medication_logs", lazy=True, cascade="all, delete-orphan"))
 
     # we already have dosage for this stiil need?
     # quantity_taken = db.Column(db.Float, nullable=True)
 
-    def __init__(self, user_id: int, medication_id: int, time_taken: datetime, taken_status: bool,
-                 scheduled_time: datetime, notes: str = None, reminder_sent: bool = False, acknowledged: bool = False):
+    def __init__(self, user_id: str, medication_id: str, scheduled_time: datetime,time_taken: datetime=None,
+                 taken_status: bool = False, notes: str = None, reminder_sent: bool = False, acknowledged: bool = False):
         super().__init__()
         self.user_id = user_id
         self.medication_id = medication_id
