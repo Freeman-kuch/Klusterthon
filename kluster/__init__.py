@@ -5,11 +5,18 @@ from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
 from flask_mail import Mail
 from kluster.celery_utils import  celery_init_app
+from scheduler.background_worker import BackgroundThread
+import queue
 
 
 db = SQLAlchemy()
 jwt = JWTManager()
 mail = Mail()
+
+# initialize the background thread and task queue
+task_queue = queue.Queue()
+background_thread = BackgroundThread(task_queue)
+background_thread.start()
 
 
 def create_app(config_class=AppConfig):
@@ -31,14 +38,12 @@ def create_app(config_class=AppConfig):
     )
     app.config.from_prefixed_env()
     celery_init_app(app)
-    
-  
+
     # Initialize Flask extensions
     CORS(app, supports_credentials=True)
     db.init_app(app)
     jwt.init_app(app)
     mail.init_app(app)
-
 
     # Import blueprints
     from kluster.auth.auth import auth
@@ -56,8 +61,6 @@ def create_app(config_class=AppConfig):
     app.register_blueprint(medication_bp)
     app.register_blueprint(notification)
 
-
-    # Create db tables if they do not exist
     with app.app_context():
         db.create_all()
 
