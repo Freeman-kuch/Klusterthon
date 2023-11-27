@@ -126,3 +126,4 @@ def medication(user_id: str, medication_id: str) -> tuple[Response, int] | Respo
              }
             ), 500
 
+from kluster.routes.schedule_medication import *
