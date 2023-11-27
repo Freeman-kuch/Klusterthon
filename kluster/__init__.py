@@ -3,22 +3,13 @@ from flask_cors import CORS
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
+from flask_mail import Mail
 from kluster.celery_utils import  celery_init_app
 
 
 db = SQLAlchemy()
 jwt = JWTManager()
-
-# app = Flask(__name__)
-
-# app.config['CELERY_BROKER_URL'] = AppConfig.CELERY_BROKER_URL
-# app.config['CELERY_RESULT_BACKEND'] = AppConfig.CELERY_RESULT_BACKEND
-
-# celery = Celery(
-#     app.import_name,
-#     backend=app.config['CELERY_RESULT_BACKEND'],
-#     broker=app.config['CELERY_BROKER_URL'],
-# )
+mail = Mail()
 
 
 def create_app(config_class=AppConfig):
@@ -46,6 +37,7 @@ def create_app(config_class=AppConfig):
     CORS(app, supports_credentials=True)
     db.init_app(app)
     jwt.init_app(app)
+    mail.init_app(app)
 
 
     # Import blueprints
@@ -54,6 +46,7 @@ def create_app(config_class=AppConfig):
     from kluster.routes.patients import patients
     from kluster.profile.profile import profile_bp
     from kluster.medications.medication import medication_bp
+    from kluster.notification.setup import notification
 
     # Register blueprints
     app.register_blueprint(auth)
@@ -61,8 +54,8 @@ def create_app(config_class=AppConfig):
     app.register_blueprint(patients)
     app.register_blueprint(profile_bp)
     app.register_blueprint(medication_bp)
+    app.register_blueprint(notification)
 
-  
 
     # Create db tables if they do not exist
     with app.app_context():

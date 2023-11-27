@@ -19,6 +19,13 @@ class AppConfig():
     GOOGLE_CLIENT_ID = os.environ.get("client_id")
     GOOGLE_CLIENT_SECRET = os.environ.get("client_secret")
     GOOGLE_DISCOVERY_URL = "https://accounts.google.com/.well-known/openid-configuration"
-    CLOUDINARY_URL = "cloudinary://" + os.environ.get("Cloudinary_API_Key") + ":" + os.environ.get("Cloudinary_API_Secret") + "@" + os.environ.get("Cloudinary_Name")
-    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
+    CLOUDINARY_URL = "cloudinary://" + os.environ.get("Cloudinary_API_Key") + ":" + os.environ.get(
+        "Cloudinary_API_Secret") + "@" + os.environ.get("Cloudinary_Name")
+    STANDARD_TIMEOUT = 1800
+    MAIL_SERVER = 'smtp.gmail.com'
+    MAIL_PORT = 587
+    MAIL_USERNAME = os.environ.get('MAIL_USERNAME')
+    MAIL_PASSWORD = os.environ.get('MAIL_PASSWORD')
+    MAIL_USE_TLS = True
+    MAIL_USE_SSL = False    CELERY_BROKER_URL = os.environ.get("CELERY_BROKER_URL")
     CELERY_RESULT_BACKEND = os.environ.get("CELERY_RESULT_BACKEND")
