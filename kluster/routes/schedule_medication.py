@@ -1,7 +1,7 @@
 from flask import request, jsonify
 from kluster.routes.patients import patients
 from kluster.models.medication import Medication
-from scheduler.scheduler import Reminder
+from scheduler.reminder import Reminder
 
 
 @patients.route('/schedule/new_medication', methods=["POST"])
@@ -30,7 +30,6 @@ def new_medication_schedule():
     try:
         new_reminder = Reminder()
         new_reminder.start_schedule(interval=dosage)
-        new_reminder.run_continuously()
     except Exception as error:
         return jsonify({
             "message": "Medication could not be scheduled",

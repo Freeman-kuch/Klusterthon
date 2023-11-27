@@ -14,7 +14,7 @@ class Reminder(schedule.Scheduler):
         super().__init__()
         self.name_of_drug = name_of_drug
 
-    def run_continuously(self) -> threading.Event:
+    def __run_continuously(self) -> threading.Event:
         """run a schedule indefinitely"""
         cease_continuous_run = threading.Event()
 
@@ -22,12 +22,17 @@ class Reminder(schedule.Scheduler):
             @classmethod
             def run(cls):
                 while not cease_continuous_run.is_set():
-                    interval = self.idle_seconds()
+                    interval = self.idle_seconds
                     if interval is None:
+                        # This means there's no more schedule to be run
+                        # e.g if the schedule was set to run once or end at a particular time
+                        # when that time reaches, there would be nothing more to run, so it
+                        # would return None
                         break
                     elif interval > 0:
                         # sleep exactly the right amount of time
-                        print(f"Time till Analytics reset: { interval } seconds")
+                        # If time is up, it would return -1
+                        print(f"Time till reminder reset: { interval } seconds")
                         time.sleep(interval)
                     self.run_pending()
                     cls.check_stop()
@@ -54,6 +59,8 @@ class Reminder(schedule.Scheduler):
             "quad_daily": 6
         }
         if possible_hours[interval] == 24:
-            self.every().day.at(datetime.strptime("hh:mm")).do()
-        self.every(possible_hours[interval]).hours.do()
-        self.run_continuously()
+            self.every().day.at(datetime.strftime("hh:mm")).do()
+        def test():
+            print("Hello")
+        self.every(possible_hours[interval]).minutes.do(test)
+        self.__run_continuously()
