@@ -13,7 +13,7 @@ MEDICATIONS
 
 
 @patients.route("/<user_id>/medications", methods=["GET"])
-def medications(user_id: str) -> tuple[Response, int] | Response | dict[Any, Any]:
+def medications(user_id: str) -> "tuple[Response, int] | Response | dict[Any, Any]":
     """
     Retrieves medication information for a specific patient based on the provided user ID and date.
 
@@ -67,7 +67,7 @@ def medications(user_id: str) -> tuple[Response, int] | Response | dict[Any, Any
 
 
 @patients.route("/<user_id>/medications/<medication_id>", methods=["GET", "DELETE"])
-def medication(user_id: str, medication_id: str) -> tuple[Response, int] | Response | dict[Any, Any]:
+def medication(user_id: str, medication_id: str) -> "tuple[Response, int] | Response | dict[Any, Any]":
     """Gets a users medication by an indicated medication id
 
     Args:

@@ -1,29 +1,39 @@
-# celery_utils.py
+from celery import Celery, Task
+from kluster.config import AppConfig
 from flask import Flask
-from celery import Celery
-import os
-
-flask_app = Flask(__name__)
-# Configure Celery inside the factory function
-flask_app.config['CELERY_BROKER_URL'] = os.getenv('CELERY_BROKER_URL', 'amqp://localhost:5672')
-flask_app.config['CELERY_RESULT_BACKEND'] = os.getenv('CELERY_RESULT_BACKEND', 'rpc://')
 
 
-def make_celery(app: Flask) -> Celery:
-    celery = Celery(
-        app.import_name,
-        backend=app.config['CELERY_RESULT_BACKEND'],
-        broker=app.config['CELERY_BROKER_URL']
-    )
-    celery.conf.update(app.config)
-
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
+def celery_init_app(app: Flask) -> Celery:
+    class FlaskTask(Task):
+        def __call__(self, *args: object, **kwargs: object) -> object:
             with app.app_context():
                 return self.run(*args, **kwargs)
 
-    celery.Task = ContextTask
-    return celery
+    celery_app = Celery(app.name, task_cls=FlaskTask)
+    celery_app.config_from_object(app.config["CELERY"])
+    celery_app.set_default()
+    app.extensions["celery"] = celery_app
+    return celery_app
+
+# def make_celery(app):
+#     celery = Celery(
+#         app.import_name,
+#         backend=app.config['CELERY_RESULT_BACKEND'],
+#         broker=app.config['CELERY_BROKER_URL']
+#     )
+#     celery.conf.update(app.config)
+#     TaskBase = celery.Task
+
+#     class ContextTask(TaskBase):
+#         abstract = True
+#         def __call__(self, *args, **kwargs):
+#             with app.app_context():
+#                 return TaskBase.__call__(self, *args, **kwargs)
+
+#     celery.Task = ContextTask
+#     celery.autodiscover_tasks(['kluster'])
+#     return celery
+
+# celery = Celery(__name__, broker=AppConfig.CELERY_BROKER_URL, backend=AppConfig.CELERY_RESULT_BACKEND)
 
 
-celery = make_celery(flask_app)
