@@ -1,9 +1,10 @@
 from datetime import datetime, timedelta
 from kluster.models.medication import Medication
-from kluster.models.medication_logs import MedicationLogs  
-from kluster.helpers import query_one_filtered  
+from kluster.models.medication_logs import MedicationLogs
+from kluster.helpers import query_one_filtered
 
-#@celery.task
+
+# @celery.task
 def create_medication_logs_async(user_id, medication_id):
     medication = query_one_filtered(Medication, id=medication_id, patient_id=user_id)
 
@@ -31,23 +32,6 @@ def create_medication_logs_async(user_id, medication_id):
             MedicationLogs(user_id=user_id, medication_id=medication.id, scheduled_time=scheduled_time).insert()
 
     return 'Medication logs scheduled successfully'
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 # from flask import Blueprint, request, jsonify, redirect, url_for
 # from datetime import datetime, timedelta

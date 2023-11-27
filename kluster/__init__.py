@@ -3,7 +3,7 @@ from flask_cors import CORS
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
-import os
+
 
 db = SQLAlchemy()
 jwt = JWTManager()
