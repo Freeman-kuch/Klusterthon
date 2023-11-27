@@ -4,13 +4,13 @@ import os
 import requests
 from typing import Dict
 
-from flask import Blueprint, request, jsonify, redirect, url_for
+from flask import Blueprint, request, jsonify, redirect
 from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, current_user, get_jwt_identity
 from oauthlib.oauth2 import WebApplicationClient
 from werkzeug.security import generate_password_hash, check_password_hash
 
 from kluster import jwt
-from kluster.helpers import convert_pic_to_link, query_one_filtered
+from kluster.helpers import query_one_filtered
 from kluster.models.profiles import Profiles
 from kluster.models.roles import Roles
 from kluster.models.users import Users
@@ -54,6 +54,7 @@ def user_lookup_callback(_jwt_header, jwt_data) -> "Dict | None":
     return query_one_filtered(Users, email=identity).to_dict() or None
 
 
+# WORKS
 @auth.route('/sign-up', methods=['POST'])
 def sign_up():
     """
@@ -114,6 +115,7 @@ def sign_up():
         }), 500
 
 
+# WORKS
 @auth.route("/login", methods=["POST"])
 def login():
     """
@@ -133,10 +135,11 @@ def login():
     emails = req.get("email")
     password = req.get("password")
     # role = req.get("role")
+    # print(password)
 
     database_data = query_one_filtered(Users, email=emails)
-    print(database_data.password)
-    print(database_data.format())
+    # print(database_data.password)
+    # print(database_data.format())
 
     if not emails or not password:
         return jsonify(
@@ -145,7 +148,7 @@ def login():
                 "message": "Bad request parameters"
             }
         ), 400
-    if not database_data or check_password_hash(database_data.password, password):
+    if not database_data or not check_password_hash(database_data.password, password):
         return jsonify(
             {
                 "message": "Invalid Email or Password",
@@ -154,12 +157,17 @@ def login():
         ), 401
     try:
         access_token = create_access_token(
-            identity=database_data["email"],
+            identity=database_data.email,
             fresh=True,
             expires_delta=datetime.timedelta(minutes=15),
         )
-        refresh_token = create_refresh_token(identity=database_data["email"])
-        role = query_one_filtered(Roles, id=database_data["role_id"])
+        refresh_token = create_refresh_token(identity=database_data.email)
+        role = query_one_filtered(Roles, id=database_data.role_id) if database_data.role_id else None
+        database_data.access_token = access_token
+        database_data.refresh_token = refresh_token
+        database_data.role_id = role
+        print(database_data.to_dict())
+        database_data.update()
         return jsonify(
             {
                 "message": "login Successful",
@@ -179,6 +187,7 @@ def login():
         ), 500
 
 
+# WORKS
 @auth.route("/me", methods=["GET"])
 @jwt_required()
 def me():
@@ -193,7 +202,7 @@ def me():
         role=current_user.get("role_id"),
     )
 
-
+# WORKS
 @auth.route("/refresh", methods=["POST"])
 @jwt_required(refresh=True)
 def refresh():
@@ -208,20 +217,21 @@ def refresh():
     :return: JSON response containing the new access token.
     """
     identify = get_jwt_identity()
-    database_data = query_one_filtered(Users, email=identify).to_dict()
+    database_data = query_one_filtered(Users, email=identify)
     access_token = create_access_token(
         identity=identify,
         fresh=True,
         expires_delta=datetime.timedelta(minutes=15),
         additional_claims={
-            "role": database_data.get("role_id", "")
+            "role": database_data.role_id if database_data.role_id else None
         }
     )
-    database_data["access_token"] = access_token
+    database_data.access_token = access_token
     database_data.update()
     return jsonify(access_token=access_token), 200
 
 
+# WORKS
 @auth.delete("/logout")
 @jwt_required(verify_type=False)
 def logout():
@@ -241,14 +251,11 @@ def logout():
     """
     identity = current_user.get("id")
     try:
-        print("here 1")
-        user = query_one_filtered(Users, id=identity).to_dict()
-        print("here 2")
-        user["access_token"] = None
-        user["google_access_token"] = None
-        user["refresh_token"] = None
-        user["google_refresh_token"] = None
-        print("here 3")
+        user = query_one_filtered(Users, id=identity)
+        user.access_token = None
+        user.google_access_token = None
+        user.refresh_token = None
+        user.google_refresh_token = None
         user.update()
         return jsonify(
             {
@@ -337,17 +344,11 @@ def callback():
         refresh_token = create_refresh_token(identity=users_email)
         database_data = query_one_filtered(Users, id=unique_id)
         if database_data:
-            # print(database_data.to_dict())
-            updating = Users(
-                id=unique_id,
-                email=users_email,
-                password="",
-                google_refresh_token=f["refresh_token"],
-                google_access_token=f["access_token"],
-                access_token=access_token,
-                refresh_token=refresh_token
-            )
-            updating.update()
+            database_data.google_refresh_token = f["refresh_token"]
+            database_data.refresh_token = refresh_token
+            database_data.google_access_token = f["access_token"]
+            database_data.access_token = access_token
+            database_data.update()
             return jsonify(
                 {
                     # "error": "Bad Request",

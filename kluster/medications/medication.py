@@ -29,7 +29,7 @@ def create_medication(doctor_id, user_id):
         start_date=datetime.strptime(data.get('start_date'), '%Y-%m-%d'),  # Parsing date string
         end_date=datetime.strptime(data.get('end_date'), '%Y-%m-%d'),  # Parsing date string
         description=data.get('description'),
-        #has_taken=data.get('has_taken') == 'true'  # Assuming 'has_taken' is sent as a string
+        # has_taken=data.get('has_taken') == 'true'  # Assuming 'has_taken' is sent as a string
     )
 
     medication.insert()
@@ -37,10 +37,10 @@ def create_medication(doctor_id, user_id):
     create_medication_logs_async.delay(user_id, medication.id)
     return jsonify({'message': 'Medication created successfully'}), 201
 
-#UPDATE, 
-#def update_medications();
-    
+# UPDATE,
+# def update_medications();
 
-#DELETE 
 
-#GET
+# DELETE
+
+# GET

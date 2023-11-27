@@ -1,13 +1,12 @@
 from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from flask import Flask
-from flask_login import LoginManager
 from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
 from celery import Celery
 
+
 db = SQLAlchemy()
-login_manager = LoginManager()
 jwt = JWTManager()
 
 celery = Celery(__name__, backend=AppConfig.CELERY_RESULT_BACKEND, broker=AppConfig.CELERY_BROKER_URL)
@@ -35,11 +34,10 @@ def create_app(config_class=AppConfig):
     app = Flask(__name__)
     if config_class:
         app.config.from_object(config_class)
-    
+
     # Initialize Flask extensions
     CORS(app, supports_credentials=True)
     db.init_app(app)
-    login_manager.init_app(app)
     jwt.init_app(app)
 
     # Initialize Celery with Flask app
