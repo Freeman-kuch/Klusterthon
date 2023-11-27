@@ -2,11 +2,12 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from kluster.models.medication import Medication
-from kluster.models.medication_logs import MedicationLogs
+#from kluster.models.medication_logs import MedicationLogs
 from kluster.models.users import Users
 
 from kluster.helpers import query_one_filtered
-from kluster.tasks import create_medication_logs_async
+# from kluster import create_medication_logs_async
+
 
 from datetime import datetime
 
@@ -34,7 +35,7 @@ def create_medication(doctor_id, user_id):
 
     medication.insert()
     #task = create_medication_logs_async.apply_async(args=[user_id, medication.id])
-    create_medication_logs_async.delay(user_id, medication.id)
+    #create_medication_logs_async.delay(user_id, medication.id) 
     return jsonify({'message': 'Medication created successfully'}), 201
 
 # UPDATE,

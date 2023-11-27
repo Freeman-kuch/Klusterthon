@@ -3,27 +3,23 @@ from flask_cors import CORS
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
-from celery import Celery
+from kluster.celery_utils import  celery_init_app
 
 
 db = SQLAlchemy()
 jwt = JWTManager()
 
-celery = Celery(__name__, backend=AppConfig.CELERY_RESULT_BACKEND, broker=AppConfig.CELERY_BROKER_URL)
+# app = Flask(__name__)
 
-def init_celery(app=None):
-    """
-    Initialize Celery with Flask app context.
-    """
-    app = app or create_app()
-    celery.conf.update(app.config)
+# app.config['CELERY_BROKER_URL'] = AppConfig.CELERY_BROKER_URL
+# app.config['CELERY_RESULT_BACKEND'] = AppConfig.CELERY_RESULT_BACKEND
 
-    class ContextTask(celery.Task):
-        def __call__(self, *args, **kwargs):
-            with app.app_context():
-                return self.run(*args, **kwargs)
+# celery = Celery(
+#     app.import_name,
+#     backend=app.config['CELERY_RESULT_BACKEND'],
+#     broker=app.config['CELERY_BROKER_URL'],
+# )
 
-    celery.Task = ContextTask
 
 def create_app(config_class=AppConfig):
     """
@@ -34,17 +30,22 @@ def create_app(config_class=AppConfig):
     app = Flask(__name__)
     if config_class:
         app.config.from_object(config_class)
-
+    
+    app.config.from_mapping(
+        CELERY=dict(
+            broker_url=AppConfig.CELERY_BROKER_URL,
+            result_backend=AppConfig.CELERY_RESULT_BACKEND,
+            task_ignore_result=True,
+        ),
+    )
+    app.config.from_prefixed_env()
+    celery_init_app(app)
+    
+  
     # Initialize Flask extensions
     CORS(app, supports_credentials=True)
     db.init_app(app)
     jwt.init_app(app)
-
-    # Initialize Celery with Flask app
-    init_celery(app)
-
-    # Register celery tasks
-    from kluster import tasks 
 
 
     # Import blueprints
@@ -68,6 +69,4 @@ def create_app(config_class=AppConfig):
         db.create_all()
 
     return app
-
-
 
