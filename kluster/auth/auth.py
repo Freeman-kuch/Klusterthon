@@ -22,7 +22,7 @@ client = WebApplicationClient(os.environ.get("client_id"))
 
 
 @jwt.user_identity_loader
-def user_identity_lookup(email: str) -> Dict | str:
+def user_identity_lookup(email: str) -> "Dict | str":
     """
     Retrieves the user identity based on the provided email.
 
@@ -37,7 +37,7 @@ def user_identity_lookup(email: str) -> Dict | str:
 
 
 @jwt.user_lookup_loader
-def user_lookup_callback(_jwt_header, jwt_data) -> Dict | None:
+def user_lookup_callback(_jwt_header, jwt_data) -> "Dict | None":
     """
     Look up a user based on the JWT data.
 

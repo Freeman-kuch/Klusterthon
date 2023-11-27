@@ -1,8 +1,9 @@
-from kluster import create_app
+from kluster import create_app, celery
 from kluster.config import AppConfig
-from kluster.celery_utils import celery
+from kluster import tasks
 
 app = create_app(AppConfig)
+
 
 if __name__ == "__main__":
     app.run(
