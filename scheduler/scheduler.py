@@ -3,6 +3,7 @@ import schedule
 import time
 import threading
 import json
+from datetime import datetime
 
 
 class Reminder(schedule.Scheduler):
@@ -13,7 +14,7 @@ class Reminder(schedule.Scheduler):
         super().__init__()
         self.name_of_drug = name_of_drug
 
-    def run_continuously(self):
+    def run_continuously(self) -> threading.Event:
         """run a schedule indefinitely"""
         cease_continuous_run = threading.Event()
 
@@ -44,7 +45,7 @@ class Reminder(schedule.Scheduler):
         continuous_thread.start()
         return cease_continuous_run
     
-    def start_schedule(self, interval):
+    def start_schedule(self, interval: str) -> None:
         """start the medication schedule"""
         possible_hours = {
             "daily": 24,
@@ -53,6 +54,6 @@ class Reminder(schedule.Scheduler):
             "quad_daily": 6
         }
         if possible_hours[interval] == 24:
-            self.every().day.at().do()
-        self.every().hours.do()
+            self.every().day.at(datetime.strptime("hh:mm")).do()
+        self.every(possible_hours[interval]).hours.do()
         self.run_continuously()

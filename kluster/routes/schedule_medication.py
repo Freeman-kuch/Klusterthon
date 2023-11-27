@@ -1,7 +1,7 @@
-from flask import request, jsonify, abort
+from flask import request, jsonify
 from kluster.routes.patients import patients
 from kluster.models.medication import Medication
-from scheduler.scheduler import Scheduler
+from scheduler.scheduler import Reminder
 
 
 @patients.route('/schedule/new_medication', methods=["POST"])
@@ -28,7 +28,9 @@ def new_medication_schedule():
         new_medication.update()
     # create a schedule
     try:
-        Scheduler.run_continuously()
+        new_reminder = Reminder()
+        new_reminder.start_schedule(interval=dosage)
+        new_reminder.run_continuously()
     except Exception as error:
         return jsonify({
             "message": "Medication could not be scheduled",
@@ -39,3 +41,19 @@ def new_medication_schedule():
         "message": "medication scheduled successfully",
         "data": new_medication.to_dict()
     }), 200
+
+
+@patients.route("/schedule/<str:patient_id>")
+def get_schedule(patient_id: str):
+    """Get the schedule for a patient"""
+    data = request.args
+    try:
+        assert isinstance(from_date := data.get("from", None, str), str)
+        assert isinstance(to_date := data.get("to", None, str), str)
+    except AssertionError:
+        return jsonify({
+            "message": "Bad request",
+            "error": "query has to be a string"
+        }), 400
+    # query using the patient Id and date for the schedule
+
