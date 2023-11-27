@@ -3,6 +3,7 @@ from flask_cors import CORS
 from flask import Flask
 from flask_jwt_extended import JWTManager
 from kluster.config import AppConfig
+from flask_mail import Mail
 
 
 db = SQLAlchemy()
@@ -23,6 +24,7 @@ def create_app(config_class=AppConfig):
     CORS(app, supports_credentials=True)
     db.init_app(app)
     jwt.init_app(app)
+    Mail(app)
 
     # Import blueprints
     from kluster.auth.auth import auth
