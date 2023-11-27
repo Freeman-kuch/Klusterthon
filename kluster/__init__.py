@@ -10,6 +10,7 @@ db = SQLAlchemy()
 login_manager = LoginManager()
 jwt = JWTManager()
 
+
 def create_app(config_class=AppConfig):
     """
     Create a new instance of the app with the given configuration.
@@ -19,7 +20,7 @@ def create_app(config_class=AppConfig):
     app = Flask(__name__)
     if config_class:
         app.config.from_object(config_class)
-    
+
     # Initialize Flask extensions
     CORS(app, supports_credentials=True)
     db.init_app(app)
@@ -39,11 +40,9 @@ def create_app(config_class=AppConfig):
     app.register_blueprint(patients)
     app.register_blueprint(profile_bp)
     app.register_blueprint(medication_bp)
-    
+
     # Create db tables if they do not exist
     with app.app_context():
         db.create_all()
 
     return app
-
-

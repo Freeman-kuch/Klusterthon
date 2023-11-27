@@ -11,7 +11,6 @@ from kluster.celery_utils import celery
 medication_bp = Blueprint("medications", __name__, url_prefix="/api/v1/medications")
 
 
-
 @celery.task
 def create_medication_logs_async(user_id, medication_id):
     medication = query_one_filtered(Medication, id=medication_id, patient_id=user_id)
@@ -41,6 +40,7 @@ def create_medication_logs_async(user_id, medication_id):
 
     return 'Medication logs scheduled successfully'
 
+
 # CREATE (CREATE MEDICATION LOGS AS MEDICATIONS ARE PRESCRIBED)
 @medication_bp.route("/<string:doctor_id>/<string:user_id>", methods=["POST"])
 def create_medication(doctor_id, user_id):
@@ -57,7 +57,7 @@ def create_medication(doctor_id, user_id):
         start_date=datetime.strptime(data.get('start_date'), '%Y-%m-%d'),  # Parsing date string
         end_date=datetime.strptime(data.get('end_date'), '%Y-%m-%d'),  # Parsing date string
         description=data.get('description'),
-        #has_taken=data.get('has_taken') == 'true'  # Assuming 'has_taken' is sent as a string
+        # has_taken=data.get('has_taken') == 'true'  # Assuming 'has_taken' is sent as a string
     )
 
     medication.insert()
@@ -65,10 +65,10 @@ def create_medication(doctor_id, user_id):
 
     return jsonify({'message': 'Medication created successfully'}), 201
 
-#UPDATE, 
-#def update_medications();
-    
+# UPDATE,
+# def update_medications();
 
-#DELETE 
 
-#GET
+# DELETE
+
+# GET
