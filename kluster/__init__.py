@@ -43,7 +43,7 @@ def create_app(config_class=AppConfig):
     # Import blueprints
     from kluster.auth.auth import auth
     from kluster.errors.error_handler import error
-    from kluster.routes.patients import patients
+    # from kluster.routes.patients import patients
     from kluster.profile.profile import profile_bp
     from kluster.medications.medication import medication_bp
     from kluster.notification.setup import notification
@@ -51,7 +51,7 @@ def create_app(config_class=AppConfig):
     # Register blueprints
     app.register_blueprint(auth)
     app.register_blueprint(error)
-    app.register_blueprint(patients)
+    # app.register_blueprint(patients)
     app.register_blueprint(profile_bp)
     app.register_blueprint(medication_bp)
     app.register_blueprint(notification)

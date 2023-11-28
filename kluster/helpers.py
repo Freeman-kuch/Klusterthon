@@ -4,7 +4,6 @@ from typing import List
 from flask_mail import Message
 
 from kluster import db, mail
-from datetime import datetime
 from cloudinary.uploader import upload
 
 
@@ -115,8 +114,8 @@ def mail_composer(subject: str,
                   patient_name: str,
                   medication_name: str,
                   dosage: str,
-                  scheduled_time: datetime,
-                  recipient: List) -> str:
+                  scheduled_time: str,
+                  recipient: List):
 
     msg = Message(subject,
                   sender=os.environ.get("MAIL_USERNAME"),
