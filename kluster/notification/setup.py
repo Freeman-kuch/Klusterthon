@@ -6,7 +6,7 @@ from kluster.models.users import Users
 from kluster import db, mail
 from kluster.helpers import query_one_filtered
 from flask_mail import Message
-from kluster.helpers import mail_composer
+from kluster.helpers import mail_compose
 import os
 
 notification = Blueprint("notification", __name__, url_prefix="/api/v1/notification")
@@ -81,18 +81,18 @@ def create_medication(user_id):
 @notification.route("/mailing")
 def testing():
     if request.method == 'GET':
-        recipient = request.form['recipient']
+        recipient: str = request.form['recipient']
         patient_name = request.form['patient_name']
         subject = request.form['subject']
         medication_name = request.form['medication_name']
         dosage = request.form['dosage']
         scheduled_time = request.form['scheduled_time']
-        mail_composer(subject,
-                      patient_name,
-                      medication_name,
-                      dosage,
-                      scheduled_time,
-                      [recipient])
+        mail_compose(subject,
+                     patient_name,
+                     medication_name,
+                     dosage,
+                     scheduled_time,
+                     recipient)
 
     return jsonify(
         {
