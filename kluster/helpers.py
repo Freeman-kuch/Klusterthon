@@ -146,6 +146,7 @@ def mail_compose(
         **kwargs
 ):
 
+
     msg = Message(subject,
                   sender=os.environ.get("MAIL_USERNAME"),
                   recipients=[recipient])
