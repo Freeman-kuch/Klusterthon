@@ -1,4 +1,9 @@
-from kluster import db
+import os
+from typing import List
+
+from flask_mail import Message
+
+from kluster import db, mail
 from datetime import datetime
 from cloudinary.uploader import upload
 
@@ -104,3 +109,29 @@ def query_paginate_filtered(table, page, **kwargs):
         page=page,
         error_out=False,
     )
+
+
+def mail_composer(subject: str,
+                  patient_name: str,
+                  medication_name: str,
+                  dosage: str,
+                  scheduled_time: datetime,
+                  recipient: List) -> str:
+
+    msg = Message(subject,
+                  sender=os.environ.get("MAIL_USERNAME"),
+                  recipients=[recipient])
+
+    mail_template_path = "/Users/firelord.py/Documents/python code/klusterthon/kluster/mail_template.html"
+
+    with open(mail_template_path, 'r', encoding='utf-8') as template_file:
+        template_content = template_file.read()
+
+    template_content = template_content.replace('[Patient\'s Name]', patient_name)
+    template_content = template_content.replace('[Medication Name]', medication_name)
+    template_content = template_content.replace('[Dosage]', dosage)
+    template_content = template_content.replace('[Scheduled Time]', scheduled_time)
+
+    msg.body = template_content
+
+    mail.send(msg)
