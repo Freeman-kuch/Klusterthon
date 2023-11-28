@@ -7,6 +7,7 @@ from datetime import datetime, timedelta
 from kluster import task_queue
 from kluster.medication_log.medication_logs import create_medication_logs_async
 from kluster import db
+from kluster.helpers import mail_composer
 
 
 @patients.route('/schedule/new_medication', methods=["POST"])
@@ -41,7 +42,8 @@ def new_medication_schedule():
     # create a schedule
     try:
         new_reminder = Reminder(new_medication.name)
-        new_reminder.start_schedule(interval=dosage)
+        new_reminder.start_schedule(interval=dosage, schedule_func=mail_composer, args=[new_medication.patient_id,
+                                                                                        new_medication.id])
     except Exception as error:
         return jsonify({
             "message": "Medication could not be scheduled",

@@ -51,7 +51,7 @@ class Reminder(schedule.Scheduler):
         continuous_thread.start()
         return cease_continuous_run
     
-    def start_schedule(self, interval: str, schedule_func: Callable) -> None:
+    def start_schedule(self, interval: str, schedule_func: Callable, args: list) -> None:
         """start the medication schedule"""
         possible_hours = {
             "daily": 24,
@@ -60,6 +60,6 @@ class Reminder(schedule.Scheduler):
             "quad_daily": 6
         }
         if possible_hours[interval] == 24:
-            self.every().day.at(datetime.now().strftime("%X")).do(schedule_func)
-        self.every(possible_hours[interval]).hours.do(schedule_func)
+            self.every().day.at(datetime.now().strftime("%X")).do(schedule_func, *args).tag(self.name_of_drug)
+        self.every(possible_hours[interval]).hours.do(schedule_func, *args).tag(self.name_of_drug)
         self.__run_continuously()
