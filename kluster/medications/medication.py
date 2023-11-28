@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request
 from flask_jwt_extended import jwt_required
 
 from kluster.models.medication import Medication
-#from kluster.models.medication_logs import MedicationLogs
+# from kluster.models.medication_logs import MedicationLogs
 from kluster.models.users import Users
 
 from kluster.helpers import query_one_filtered
