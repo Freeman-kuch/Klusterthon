@@ -65,13 +65,12 @@ def medications(user_id: str) -> "tuple[Response, int] | Response | dict[Any, An
         ), 500
 
 
-
 @patients.route("/<user_id>/medications/<medication_id>", methods=["GET", "DELETE"])
 def medication(user_id: str, medication_id: str) -> "tuple[Response, int] | Response | dict[Any, Any]":
     """Gets a users medication by an indicated medication id
 
     Args:
-        user_id (str): The ID of the  Patiend
+        user_id (str): The ID of the  Patient
         medication_id (str): The ID of the medication to be gotten
 
     Returns:
@@ -125,5 +124,6 @@ def medication(user_id: str, medication_id: str) -> "tuple[Response, int] | Resp
                 "message": "Internal Server Error" 
              }
             ), 500
+
 
 from kluster.routes.schedule_medication import *

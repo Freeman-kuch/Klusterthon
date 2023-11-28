@@ -1,10 +1,12 @@
 from flask import request, jsonify
 from kluster.routes.patients import patients
 from kluster.models.medication import Medication
+from kluster.models.medication_logs import MedicationLogs
 from scheduler.reminder import Reminder
 from datetime import datetime, timedelta
 from kluster import task_queue
 from kluster.medication_log.medication_logs import create_medication_logs_async
+from kluster import db
 
 
 @patients.route('/schedule/new_medication', methods=["POST"])
@@ -65,9 +67,16 @@ def get_schedule(patient_id: str):
             "error": "query has to be a string"
         }), 400
     # query using the patient Id and date for the schedule
-
-
+    scheduled_medication = MedicationLogs.query.filter(
+        MedicationLogs.user_id == patient_id,
+        db.or_(
+            MedicationLogs.scheduled_time >= from_date,
+            MedicationLogs.scheduled_time <= to_date
+        ).order_by(MedicationLogs.scheduled_time.asc())
+    )
+    # temporary, extra processing is needed
     return jsonify({
-        "message": "retrieved succesfully"
+        "message": "retrieved successfully",
+        "data": [obj.to_dict() for obj in scheduled_medication]
     }), 200
 
